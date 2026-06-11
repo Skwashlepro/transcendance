@@ -1,0 +1,42 @@
+version: '3.8'          # Docker Compose version
+
+services:              # Define your containers here
+
+  # SERVICE 1: PostgreSQL Database
+  postgres:
+    image: postgres:15              # Use official PostgreSQL image version 15
+    container_name: transcendance-db
+    environment:
+      POSTGRES_USER: tekken_player      # Username for DB
+      POSTGRES_PASSWORD: iloveharada  # Password for DB
+      POSTGRES_DB: transcendance_db     # Database name
+    ports:
+      - "5432:5432"                # Port mapping: (host:container)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data    # Persistent storage
+    networks:
+      - transcendance-network
+
+  # SERVICE 2: Go API Backend
+  backend:
+    build: ./backend               # Path to your Go project with Dockerfile
+    container_name: transcendance-api
+    environment:
+      DB_HOST: postgres             # Service name (not localhost!)
+      DB_PORT: 5432
+      DB_USER: tekken_player
+      DB_PASSWORD: iloveharada
+      DB_NAME: transcendance_db
+    ports:
+      - "8000:8000"               # Expose Go API to your machine
+    depends_on:
+      - postgres                   # Start postgres BEFORE backend
+    networks:
+      - transcendance-network
+
+volumes:
+  postgres_data:                   # Named volume for persistent DB storage
+
+networks:
+  transcendance-network:           # Network for services to communicate
+    driver: bridge
