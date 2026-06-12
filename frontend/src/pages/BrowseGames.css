@@ -1,5 +1,6 @@
 .browse-games h1 {
   margin-bottom: 32px;
+  animation: slideInUp 0.6s ease-out;
 }
 
 .filters {
@@ -7,14 +8,27 @@
 }
 
 .search-box {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+  animation: slideInUp 0.6s ease-out 0.1s both;
 }
 
 .search-box input {
   width: 100%;
   max-width: 500px;
   padding: 12px 16px;
-  font-size: 16px;
+  font-size: 1rem;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+  background-color: rgba(37, 37, 37, 0.8);
 }
 
 .genre-filter {
@@ -22,35 +36,41 @@
   gap: 10px;
   flex-wrap: wrap;
   margin-top: 20px;
+  animation: slideInUp 0.6s ease-out 0.15s both;
 }
 
 .genre-btn {
   padding: 8px 16px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border-light);
   background-color: transparent;
   color: var(--text-secondary);
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.95rem;
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .genre-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
 }
 
 .genre-btn.active {
-  background-color: var(--accent);
-  color: var(--bg-dark);
-  border-color: var(--accent);
+  background-color: var(--primary);
+  color: var(--bg-primary);
+  border-color: var(--primary);
+  font-weight: 600;
+  box-shadow: var(--shadow-md);
 }
 
 .games-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
+  animation: slideInUp 0.6s ease-out 0.2s both;
 }
 
 .no-results {
@@ -58,4 +78,5 @@
   text-align: center;
   color: var(--text-secondary);
   padding: 60px 20px;
+  font-size: 1.125rem;
 }

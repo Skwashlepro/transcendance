@@ -9,8 +9,8 @@ import BrowseGames from './pages/BrowseGames';
 import GameDetail from './pages/GameDetail';
 import ReviewGame from './pages/ReviewGame';
 import Profile from './pages/Profile';
-import Friends from './pages/Friends';
-import Chat from './pages/Chat';
+import Signin from './pages/Signin';
+import Signup from './pages/signup';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -27,8 +27,9 @@ function App() {
             <Route path="/game/:id" element={<GameDetail />} />
             <Route path="/game/:id/review" element={<ReviewGame />} />
             <Route path="/profile/:username" element={<Profile />} />
-            <Route path="/friends" element={<Friends />} />
-            <Route path="/chat/:friendId" element={<Chat />} />
+            <Route path="/signin" element={<Signin />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="*" element={<h1>404 - Not Found</h1>} />
           </Routes>
         </main>
       </div>

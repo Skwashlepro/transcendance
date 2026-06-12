@@ -28,11 +28,8 @@ function Navigation({ user }) {
             </>
           ) : (
             <>
-              <Link to="/login" className="nav-link">
-                Login
-              </Link>
-              <Link to="/signup" className="nav-link signup">
-                Sign Up
+              <Link to="/signin" className="nav-link">
+                Sign In
               </Link>
             </>
           )}
