@@ -1,32 +1,38 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navigation from './ui/Navigation';
 import './App.css';
 
+// Pages
+import HomePage from './pages/HomePage';
+import BrowseGames from './pages/BrowseGames';
+import GameDetail from './pages/GameDetail';
+import ReviewGame from './pages/ReviewGame';
+import Profile from './pages/Profile';
+import Friends from './pages/Friends';
+import Chat from './pages/Chat';
+
 function App() {
+  const [user, setUser] = useState(null);
+
   return (
     <Router>
       <div className="app">
-        <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
-          <div className="container-fluid">
-            <span className="navbar-brand mb-0 h1">Transcendance</span>
-          </div>
-        </nav>
-
-        <main className="container mt-4">
+        <Navigation user={user} />
+        
+        <main className="main-content">
           <Routes>
             <Route path="/" element={<HomePage />} />
+            <Route path="/games" element={<BrowseGames />} />
+            <Route path="/game/:id" element={<GameDetail />} />
+            <Route path="/game/:id/review" element={<ReviewGame />} />
+            <Route path="/profile/:username" element={<Profile />} />
+            <Route path="/friends" element={<Friends />} />
+            <Route path="/chat/:friendId" element={<Chat />} />
           </Routes>
         </main>
       </div>
     </Router>
-  );
-}
-
-function HomePage() {
-  return (
-    <div>
-      <h1>Welcome to Transcendance</h1>
-    </div>
   );
 }
 

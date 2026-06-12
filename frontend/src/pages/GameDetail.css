@@ -1,0 +1,139 @@
+.game-detail {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.game-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  margin-bottom: 60px;
+  align-items: start;
+}
+
+.game-cover {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+.game-info h1 {
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+.game-meta {
+  margin-bottom: 12px;
+  color: var(--text-secondary);
+}
+
+.game-meta strong {
+  color: var(--text-primary);
+}
+
+.game-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.game-description {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 30px;
+  margin-bottom: 40px;
+}
+
+.game-description h2 {
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.game-reviews {
+  margin-bottom: 40px;
+}
+
+.game-reviews h2 {
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.review-item {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.review-item:hover {
+  border-color: var(--accent);
+}
+
+.review-header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.review-author {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.review-author:hover {
+  color: var(--accent-hover);
+}
+
+.review-rating {
+  margin-left: auto;
+  color: var(--accent);
+}
+
+.review-date {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.review-item h4 {
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+
+.review-item p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .game-header {
+    grid-template-columns: 1fr;
+  }
+
+  .game-info h1 {
+    font-size: 28px;
+  }
+
+  .game-actions {
+    flex-direction: column;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

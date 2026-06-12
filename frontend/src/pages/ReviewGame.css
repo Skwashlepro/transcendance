@@ -1,0 +1,87 @@
+.review-game {
+  max-width: 800px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.review-game h1 {
+  margin-bottom: 32px;
+}
+
+.review-form {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 40px;
+}
+
+.form-group {
+  margin-bottom: 28px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  font-family: inherit;
+}
+
+.rating-selector {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.star {
+  background: none;
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+}
+
+.star:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.star.active {
+  border-color: var(--accent);
+  background-color: rgba(0, 212, 255, 0.1);
+  color: var(--accent);
+}
+
+.rating-display {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin: 0;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.form-actions .btn {
+  flex: 1;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
