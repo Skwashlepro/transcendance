@@ -19,7 +19,7 @@ services:              # Define your containers here
 
   # SERVICE 2: Go API Backend
   backend:
-    build: ./backend               # Path to your Go project with Dockerfile
+    build: ../backend               # Path to your Go project with Dockerfile
     container_name: transcendance-api
     environment:
       DB_HOST: postgres             # Service name (not localhost!)
