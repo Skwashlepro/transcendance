@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './signup.css';
 
 function Signup() {
@@ -8,10 +8,43 @@ function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Handle sign-up logic here
-  };
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+
+    const response = await fetch(
+      "http://localhost:8000/api/signup",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password
+        }),
+      }
+    );
+
+
+    const data = await response.json();
+
+
+    if (response.ok) {
+      console.log("Signup success:", data);
+
+      navigate("/signin");
+
+    } else {
+      console.log("Signup failed:", data);
+    }
+
+
+  } catch (error) {
+    console.log("Backend error:", error);
+  }
+};
 
   return (
     <div className="signup-container">

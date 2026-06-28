@@ -1,8 +1,23 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './HomePage.css';
 
 function HomePage() {
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+
+    fetch("http://localhost:8000/api/test")
+      .then(response => response.json())
+      .then(data => {
+        setMessage(data.message);
+      })
+      .catch(error => {
+        console.log("Backend error:", error);
+      });
+
+  }, []);
+
   return (
     <div className="home-page">
       <section className="hero">
