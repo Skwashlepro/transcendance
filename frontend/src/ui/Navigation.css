@@ -2,11 +2,11 @@
   position: sticky;
   top: 0;
   z-index: 1000;
-  background-color: rgba(26, 26, 26, 0.95);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(16, 16, 16, 0.84);
+  backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding: 16px 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
 }
 
 .navbar-container {
@@ -45,7 +45,7 @@
   border: none;
   background: none;
   cursor: pointer;
-  padding: 8px 0;
+  padding: 10px 0;
   position: relative;
 }
 
@@ -66,6 +66,14 @@
 
 .nav-link:hover {
   color: var(--text-primary);
+}
+
+.nav-link.active {
+  color: var(--text-primary);
+}
+
+.nav-link.active::after {
+  width: 100%;
 }
 
 .logout-btn {

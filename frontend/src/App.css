@@ -38,17 +38,20 @@ body {
 
 .app {
   min-height: 100vh;
-  background-color: var(--bg-primary);
+  background:
+    radial-gradient(circle at top left, rgba(0, 212, 255, 0.09), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(255, 255, 255, 0.03), transparent 26%),
+    var(--bg-primary);
   display: flex;
   flex-direction: column;
 }
 
 .main-content {
   flex: 1;
-  max-width: 1440px;
+  max-width: 1480px;
   margin: 0 auto;
   width: 100%;
-  padding: 60px 32px;
+  padding: 52px 32px 72px;
 }
 
 /* Typography */

@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { api } from '../utils/api';
 import './HomePage.css';
 
 function HomePage() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:8000/api/health')
-      .then(response => response.json())
-      .then(data => {
+    api.health()
+      .then((data) => {
         setMessage(data.message || '');
       })
-      .catch(error => {
-        console.log('Backend error:', error);
+      .catch(() => {
+        setMessage('API unavailable');
       });
 
   }, []);
@@ -20,12 +20,34 @@ function HomePage() {
   return (
     <div className="home-page">
       <section className="hero">
-        <h1>GameVault</h1>
-        <p>Discover, Review, and Discuss Video Games with the Community</p>
-        {message && <p className="api-status">{message}</p>}
-        <Link to="/games" className="btn btn-primary">
-          Browse Games
-        </Link>
+        <div className="hero-copy">
+          <p className="eyebrow">Public game library</p>
+          <h1>GameVault</h1>
+          <p>Discover, review, and discuss standout games in a live catalog.</p>
+          <div className="hero-actions">
+            <Link to="/games" className="btn btn-primary">
+              Browse Games
+            </Link>
+            <Link to="/play" className="btn btn-secondary">
+              Play Pong
+            </Link>
+          </div>
+          {message && <p className="api-status">{message}</p>}
+        </div>
+        <div className="hero-panel">
+          <div>
+            <span>Live library</span>
+            <strong>4 curated games</strong>
+          </div>
+          <div>
+            <span>Community score</span>
+            <strong>4.8 / 5 avg</strong>
+          </div>
+          <div>
+            <span>Mode</span>
+            <strong>Browse, review, play</strong>
+          </div>
+        </div>
       </section>
 
       <section className="features">

@@ -18,6 +18,10 @@ func main() {
 	}
 	defer db.Close()
 
+	if err := database.EnsureGamesSchema(db); err != nil {
+		log.Fatal("Games schema setup failed:", err)
+	}
+
 	hub := ws.NewHub(db)
 	go hub.Run()
 
@@ -89,6 +93,8 @@ func main() {
 			chat.POST("/:username", handlers.SendMessageHandler(db))
 		}
 
+		api.GET("/games", handlers.GetGamesHandler(db))
+		api.GET("/games/:id", handlers.GetGameHandler(db))
 		api.GET("/stats", auth.AuthMiddleware(), handlers.GetMyStatsHandler(db))
 	}
 

@@ -1,40 +1,50 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { api } from '../utils/api';
 import './GameDetail.css';
 
 function GameDetail() {
   const { id } = useParams();
+  const [game, setGame] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Mock data - replace with API call
-  const game = {
-    id: id,
-    title: 'Elden Ring',
-    genre: 'Action RPG',
-    developer: 'FromSoftware',
-    releaseDate: '2022-02-25',
-    platforms: ['PC', 'PlayStation 5', 'Xbox Series X'],
-    description:
-      'Elden Ring is an action role-playing game developed by FromSoftware and published by Bandai Namco Entertainment. The game was directed by Hidetaka Miyazaki and produced by Yoji Shinkawa.',
-    coverImage: 'https://via.placeholder.com/800x450?text=Elden+Ring',
-    reviews: [
-      {
-        id: 1,
-        author: 'gamer123',
-        rating: 5,
-        title: 'Masterpiece!',
-        content: 'An absolute masterpiece. The world design is incredible.',
-        date: '2024-06-10',
-      },
-      {
-        id: 2,
-        author: 'reviewer456',
-        rating: 4,
-        title: 'Great game',
-        content: 'Amazing game but some difficulty spikes can be frustrating.',
-        date: '2024-06-08',
-      },
-    ],
-  };
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadGame() {
+      setLoading(true);
+      setError('');
+
+      try {
+        const data = await api.getGame(id);
+        if (isMounted) {
+          setGame(data.game);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err.message || 'Unable to load game details');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadGame();
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  if (loading) {
+    return <div className="game-detail"><p>Loading game details...</p></div>;
+  }
+
+  if (error || !game) {
+    return <div className="game-detail"><p>{error || 'Game not found.'}</p></div>;
+  }
 
   const avgRating = game.reviews.length > 0
     ? (game.reviews.reduce((acc, r) => acc + r.rating, 0) / game.reviews.length).toFixed(1)

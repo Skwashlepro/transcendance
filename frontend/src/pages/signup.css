@@ -1,0 +1,7 @@
+.auth-page {
+	position: relative;
+}
+
+.auth-card {
+	box-shadow: var(--shadow-xl);
+}

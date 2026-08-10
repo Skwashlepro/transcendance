@@ -1,10 +1,31 @@
+.browse-games {
+  animation: fadeIn 0.6s ease-out;
+  position: relative;
+}
+
+.browse-games::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top right, rgba(0, 212, 255, 0.09), transparent 28%),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.04), transparent 22%);
+  z-index: -1;
+}
+
 .browse-games h1 {
-  margin-bottom: 32px;
+  margin-bottom: 20px;
   animation: slideInUp 0.6s ease-out;
 }
 
 .filters {
   margin-bottom: 40px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  background: rgba(18, 18, 18, 0.72);
+  backdrop-filter: blur(14px);
 }
 
 .search-box {
@@ -15,11 +36,11 @@
 .search-box input {
   width: 100%;
   max-width: 500px;
-  padding: 12px 16px;
+  padding: 14px 18px;
   font-size: 1rem;
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
   color: var(--text-primary);
   transition: all 0.2s ease;
 }
@@ -40,11 +61,11 @@
 }
 
 .genre-btn {
-  padding: 8px 16px;
-  border: 1px solid var(--border-light);
-  background-color: transparent;
+  padding: 10px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.02);
   color: var(--text-secondary);
-  border-radius: 8px;
+  border-radius: 999px;
   cursor: pointer;
   font-size: 0.95rem;
   font-weight: 500;

@@ -108,6 +108,11 @@ export const api = {
     }),
 
   getMatchHistory: (username) => request(`/api/users/${username}/matches`),
+  getGames: (params = {}) => {
+    const searchParams = new URLSearchParams(params).toString();
+    return request(`/api/games${searchParams ? `?${searchParams}` : ''}`);
+  },
+  getGame: (id) => request(`/api/games/${id}`),
   getStats: () => request('/api/stats'),
   health: () => request('/api/health'),
 };

@@ -7,8 +7,15 @@ function GameCard({ game }) {
 
   return (
     <Link to={`/game/${game.id}`} className="game-card">
-      <div className="game-card-image">
-        <img src={game.coverImage} alt={game.title} />
+      <div
+        className="game-card-image"
+        style={game.coverImage ? { backgroundImage: `linear-gradient(180deg, rgba(6, 10, 18, 0.08) 0%, rgba(6, 10, 18, 0.78) 100%), url(${game.coverImage})` } : undefined}
+      >
+        <div className="game-card-image-fallback" />
+        <div className="game-card-image-copy">
+          <span>{game.genre}</span>
+          <strong>{game.title}</strong>
+        </div>
       </div>
       <div className="game-card-content">
         <h3>{game.title}</h3>
