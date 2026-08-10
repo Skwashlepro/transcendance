@@ -1,4 +1,3 @@
-.env
 *.exe
 *.dll
 *.so
@@ -13,3 +12,4 @@ backend/main
 backend/transcendance-backend
 uploads/*
 !uploads/.gitkeep
+#.env
