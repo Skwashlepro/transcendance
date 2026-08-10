@@ -1,56 +1,74 @@
-services:              # Define your containers here
-
-  # SERVICE 1: PostgreSQL Database
+services:
   postgres:
-    image: postgres:15              # Use official PostgreSQL image version 15
+    image: postgres:15
     container_name: transcendance-db
+    env_file:
+      - ../.env
     environment:
-      POSTGRES_USER: tekken_player      # Username for DB
-      POSTGRES_PASSWORD: iloveharada  # Password for DB
-      POSTGRES_DB: transcendance_db     # Database name
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"                # Port mapping: (host:container)
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data    # Persistent storage
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - transcendance-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  # SERVICE 2: Go API Backend
   backend:
-    build: ../backend               # Path to your Go project with Dockerfile
+    build: ../backend
     container_name: transcendance-api
+    env_file:
+      - ../.env
     environment:
-      DB_HOST: postgres             # Service name (not localhost!)
+      DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: tekken_player
-      DB_PASSWORD: iloveharada
-      DB_NAME: transcendance_db
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      UPLOAD_DIR: /app/uploads
     ports:
-      - "8000:8000"               # Expose Go API to your machine
+      - "8000:8000"
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
-      - postgres                   # Start postgres BEFORE backend
+      postgres:
+        condition: service_healthy
     networks:
       - transcendance-network
 
-  # SERVICE 3: React Frontend
   frontend:
-    build: ../frontend              # Path to your React project with Dockerfile
+    build: ../frontend
     container_name: transcendance-frontend
+    env_file:
+      - ../.env
     ports:
-      - "3000:3000"               # Expose React dev server to your machine
+      - "3000:3000"
     environment:
-      - REACT_APP_API_URL=http://backend:8000
+      REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:8000}
+      REACT_APP_WS_URL: ${REACT_APP_WS_URL:-ws://localhost:8000}
+      HOST: "0.0.0.0"
+      CHOKIDAR_USEPOLLING: "true"
     volumes:
-      - ../frontend/src:/app/src  # Mount source code for live updates
+      - ../frontend/src:/app/src
       - ../frontend/public:/app/public
     depends_on:
-      - backend                    # Start backend BEFORE frontend
+      - backend
     networks:
       - transcendance-network
 
 volumes:
-  postgres_data:                   # Named volume for persistent DB storage
+  postgres_data:
+  uploads_data:
 
 networks:
-  transcendance-network:           # Network for services to communicate
+  transcendance-network:
     driver: bridge

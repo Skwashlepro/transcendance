@@ -1,11 +1,20 @@
-FROM golang:1.25
+FROM golang:1.23-alpine AS builder
 
 WORKDIR /app
 
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
+RUN CGO_ENABLED=0 GOOS=linux go build -o main .
 
-RUN  go mod download
+FROM alpine:3.19
 
-RUN	go build -o main .
+RUN apk add --no-cache ca-certificates
+WORKDIR /app
 
+COPY --from=builder /app/main .
+RUN mkdir -p /app/uploads/avatars
+
+EXPOSE 8000
 CMD ["./main"]

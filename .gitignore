@@ -1,0 +1,15 @@
+.env
+*.exe
+*.dll
+*.so
+*.dylib
+node_modules/
+build/
+dist/
+*.log
+.DS_Store
+Thumbs.db
+backend/main
+backend/transcendance-backend
+uploads/*
+!uploads/.gitkeep

@@ -1,0 +1,19 @@
+.pong-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pong-canvas {
+  border: 2px solid #333;
+  border-radius: 8px;
+  max-width: 100%;
+  height: auto;
+  outline: none;
+}
+
+.pong-controls {
+  color: #888;
+  font-size: 0.875rem;
+}

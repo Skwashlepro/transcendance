@@ -1,106 +1,101 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	"net/http"
+	"log"
 	"os"
 
-	_ "github.com/lib/pq"
-
+	"github.com/gin-gonic/gin"
 	"transcendance/backend/src/auth"
+	"transcendance/backend/src/database"
+	"transcendance/backend/src/handlers"
+	"transcendance/backend/src/ws"
 )
 
+func main() {
+	db, err := database.Connect()
+	if err != nil {
+		log.Fatal("Database connection failed:", err)
+	}
+	defer db.Close()
 
-func enableCors(next http.Handler) http.Handler {
+	hub := ws.NewHub(db)
+	go hub.Run()
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	uploadDir := os.Getenv("UPLOAD_DIR")
+	if uploadDir == "" {
+		uploadDir = "./uploads"
+	}
+	os.MkdirAll(uploadDir+"/avatars", 0755)
 
-		w.Header().Set(
-			"Access-Control-Allow-Origin",
-			"http://localhost:3000",
-		)
+	if os.Getenv("GIN_MODE") == "" {
+		gin.SetMode(gin.ReleaseMode)
+	}
 
-		w.Header().Set(
-			"Access-Control-Allow-Headers",
-			"Content-Type",
-		)
+	r := gin.Default()
 
-		w.Header().Set(
-			"Access-Control-Allow-Methods",
-			"GET, POST, OPTIONS",
-		)
+	corsOrigin := os.Getenv("CORS_ORIGIN")
+	if corsOrigin == "" {
+		corsOrigin = "http://localhost:3000"
+	}
 
-		if r.Method == "OPTIONS" {
+	r.Use(func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", corsOrigin)
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
 			return
 		}
-
-		next.ServeHTTP(w, r)
+		c.Next()
 	})
-}
 
+	r.Static("/uploads", uploadDir)
 
-func main() {
+	api := r.Group("/api")
+	{
+		api.GET("/health", handlers.HealthHandler(db))
 
-
-	connStr := "host=" + os.Getenv("DB_HOST") +
-		" port=" + os.Getenv("DB_PORT") +
-		" user=" + os.Getenv("DB_USER") +
-		" password=" + os.Getenv("DB_PASSWORD") +
-		" dbname=" + os.Getenv("DB_NAME") +
-		" sslmode=disable"
-
-
-	db, err := sql.Open("postgres", connStr)
-
-	if err != nil {
-		fmt.Println("Error opening db:", err)
-		return
-	}
-
-
-	err = db.Ping()
-
-	if err != nil {
-		fmt.Println("Error connecting to db:", err)
-		return
-	}
-
-
-	fmt.Println("Connected to PostgreSQL!")
-
-
-	mux := http.NewServeMux()
-
-
-	mux.HandleFunc("/api/test", func(w http.ResponseWriter, r *http.Request) {
-
-		w.Header().Set("Content-Type", "application/json")
-
-		w.Write([]byte(`
+		authGroup := api.Group("/auth")
 		{
-			"message":"Hello from Go backend"
+			authGroup.POST("/signup", auth.SignupHandler(db))
+			authGroup.POST("/signin", auth.SigninHandler(db))
+			authGroup.GET("/me", auth.AuthMiddleware(), auth.MeHandler(db))
 		}
-		`))
-	})
 
+		users := api.Group("/users")
+		{
+			users.GET("/search", auth.AuthMiddleware(), handlers.SearchUsersHandler(db))
+			users.GET("/:username", handlers.GetProfileHandler(db))
+			users.PUT("/profile", auth.AuthMiddleware(), handlers.UpdateProfileHandler(db))
+			users.POST("/avatar", auth.AuthMiddleware(), handlers.UploadAvatarHandler(db))
+			users.GET("/:username/matches", handlers.GetMatchHistoryHandler(db))
+		}
 
-	// signup route
-	mux.HandleFunc(
-		"/api/signup",
-		auth.Signup(db),
-	)
+		friends := api.Group("/friends", auth.AuthMiddleware())
+		{
+			friends.GET("", func(c *gin.Context) {
+				handlers.ListFriendsHandler(db, hub.OnlineUsers())(c)
+			})
+			friends.GET("/pending", handlers.ListPendingHandler(db))
+			friends.POST("", handlers.AddFriendHandler(db))
+			friends.POST("/accept/:id", handlers.AcceptFriendHandler(db))
+			friends.DELETE("/:username", handlers.RemoveFriendHandler(db))
+		}
 
+		chat := api.Group("/chat", auth.AuthMiddleware())
+		{
+			chat.GET("/conversations", handlers.GetConversationsHandler(db))
+			chat.GET("/:username", handlers.GetChatHistoryHandler(db))
+			chat.POST("/:username", handlers.SendMessageHandler(db))
+		}
 
-	fmt.Println("Server running on port 8000")
+		api.GET("/stats", auth.AuthMiddleware(), handlers.GetMyStatsHandler(db))
+	}
 
+	r.GET("/ws", hub.HandleWebSocket)
 
-	err = http.ListenAndServe(
-		":8000",
-		enableCors(mux),
-	)
-
-	if err != nil {
-		fmt.Println(err)
+	log.Println("Server running on :8000")
+	if err := r.Run(":8000"); err != nil {
+		log.Fatal(err)
 	}
 }
