@@ -113,6 +113,11 @@ export const api = {
     return request(`/api/games${searchParams ? `?${searchParams}` : ''}`);
   },
   getGame: (id) => request(`/api/games/${id}`),
+  createGameReview: (id, payload) =>
+    request(`/api/games/${id}/reviews`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
   getStats: () => request('/api/stats'),
   health: () => request('/api/health'),
 };

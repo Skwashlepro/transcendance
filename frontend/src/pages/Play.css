@@ -55,6 +55,12 @@
   padding: 3rem;
 }
 
+.queue-timer {
+  margin: 0.75rem 0 1.25rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
 .spinner {
   width: 40px;
   height: 40px;
@@ -94,6 +100,95 @@
   margin-bottom: 1rem;
   text-align: center;
   border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.play-dashboard {
+  margin-top: 2.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 1rem;
+}
+
+.stats-card,
+.history-card {
+  background: linear-gradient(180deg, rgba(22, 22, 22, 0.98), rgba(14, 14, 14, 0.96));
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 1.1rem;
+}
+
+.stats-card h2,
+.history-card h2 {
+  font-size: 1.05rem;
+  margin: 0 0 0.85rem;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.stats-grid div {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 0.65rem 0.75rem;
+}
+
+.stats-grid span {
+  display: block;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  margin-bottom: 0.35rem;
+}
+
+.stats-grid strong {
+  font-size: 1.25rem;
+}
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  max-height: 330px;
+  overflow: auto;
+}
+
+.history-list li {
+  display: grid;
+  grid-template-columns: 1.35fr auto auto;
+  gap: 0.8rem;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 0.6rem 0.7rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.history-list li strong {
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.history-list li span,
+.history-list li time {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.history-score {
+  font-weight: 700;
+}
+
+.history-empty {
+  color: var(--text-secondary);
+  margin: 0.2rem 0 0;
 }
 
 .btn-primary, .btn-secondary {
@@ -137,5 +232,14 @@
   }
   .btn-large {
     min-width: 200px;
+  }
+
+  .play-dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .history-list li {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
   }
 }

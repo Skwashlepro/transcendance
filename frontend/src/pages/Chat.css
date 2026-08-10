@@ -57,6 +57,30 @@
 .chat-header {
   padding: 1rem;
   border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.socket-status {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.socket-status.online {
+  color: #20d67a;
+  border-color: rgba(32, 214, 122, 0.45);
+  background: rgba(32, 214, 122, 0.1);
+}
+
+.socket-status.offline {
+  color: #ffb020;
+  border-color: rgba(255, 176, 32, 0.45);
+  background: rgba(255, 176, 32, 0.08);
 }
 
 .chat-header a {

@@ -1,21 +1,96 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useWebSocket } from '../hooks/useWebSocket';
 import { api } from '../utils/api';
 import './HomePage.css';
 
 function HomePage() {
+  const { isAuthenticated } = useAuth();
   const [message, setMessage] = useState('');
+  const [apiLatency, setApiLatency] = useState(null);
+  const [catalogCount, setCatalogCount] = useState(0);
+  const [friends, setFriends] = useState([]);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  const handlePresence = useCallback((msg) => {
+    if (msg.type !== 'presence') return;
+    setFriends((prev) => prev.map((f) => (f.id === msg.user_id ? { ...f, online: !!msg.data?.online } : f)));
+  }, []);
+
+  const { connected } = useWebSocket(isAuthenticated ? handlePresence : null);
+
+  const onlineCount = useMemo(() => friends.filter((friend) => friend.online).length, [friends]);
 
   useEffect(() => {
+    const start = performance.now();
     api.health()
       .then((data) => {
+        setApiLatency(Math.round(performance.now() - start));
         setMessage(data.message || '');
       })
       .catch(() => {
         setMessage('API unavailable');
+        setApiLatency(null);
       });
-
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCatalog = async () => {
+      try {
+        const data = await api.getGames({ search: '', genre: 'All' });
+        if (!cancelled) {
+          setCatalogCount((data.games || []).length);
+        }
+      } catch {
+        if (!cancelled) {
+          setCatalogCount(0);
+        }
+      }
+    };
+
+    loadCatalog();
+    const timer = setInterval(loadCatalog, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setFriends([]);
+      setPendingCount(0);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadSocial = async () => {
+      try {
+        const [friendsData, pendingData] = await Promise.all([
+          api.getFriends(),
+          api.getPendingRequests(),
+        ]);
+        if (cancelled) return;
+        setFriends(friendsData.friends || []);
+        setPendingCount((pendingData.requests || []).length);
+      } catch {
+        if (cancelled) return;
+        setFriends([]);
+        setPendingCount(0);
+      }
+    };
+
+    loadSocial();
+    const timer = setInterval(loadSocial, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [isAuthenticated]);
 
   return (
     <div className="home-page">
@@ -36,16 +111,28 @@ function HomePage() {
         </div>
         <div className="hero-panel">
           <div>
+            <span>System status</span>
+            <strong>{connected ? 'Realtime connected' : 'Realtime offline'}</strong>
+            <small>{apiLatency !== null ? `API latency ${apiLatency} ms` : 'API latency unavailable'}</small>
+          </div>
+          <div>
             <span>Live library</span>
-            <strong>4 curated games</strong>
+            <strong>{catalogCount} games loaded</strong>
+            <small>Auto-refreshes every 30 seconds</small>
           </div>
           <div>
-            <span>Community score</span>
-            <strong>4.8 / 5 avg</strong>
-          </div>
-          <div>
-            <span>Mode</span>
-            <strong>Browse, review, play</strong>
+            <span>Friends & chat</span>
+            {isAuthenticated ? (
+              <>
+                <strong>{onlineCount}/{friends.length} online, {pendingCount} pending</strong>
+                <small>Presence updates in realtime</small>
+              </>
+            ) : (
+              <>
+                <strong>Sign in to unlock social live stats</strong>
+                <small>Friends, chat, and online indicators</small>
+              </>
+            )}
           </div>
         </div>
       </section>

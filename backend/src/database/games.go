@@ -60,6 +60,8 @@ func EnsureGamesSchema(db *sql.DB) error {
 			title = EXCLUDED.title,
 			content = EXCLUDED.content,
 			review_date = EXCLUDED.review_date`,
+		`SELECT setval('games_id_seq', COALESCE((SELECT MAX(id) FROM games), 1), true)`,
+		`SELECT setval('game_reviews_id_seq', COALESCE((SELECT MAX(id) FROM game_reviews), 1), true)`,
 	}
 
 	for _, statement := range statements {

@@ -95,6 +95,7 @@ func main() {
 
 		api.GET("/games", handlers.GetGamesHandler(db))
 		api.GET("/games/:id", handlers.GetGameHandler(db))
+		api.POST("/games/:id/reviews", auth.AuthMiddleware(), handlers.CreateGameReviewHandler(db))
 		api.GET("/stats", auth.AuthMiddleware(), handlers.GetMyStatsHandler(db))
 	}
 

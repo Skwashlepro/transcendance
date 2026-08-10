@@ -1,24 +1,88 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
+import { api } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 import './ReviewGame.css';
+
+const CATALOG_CACHE_KEY = 'game_catalog_cache_v1';
+
+function findCachedGameById(id) {
+  try {
+    const cached = JSON.parse(localStorage.getItem(CATALOG_CACHE_KEY) || 'null');
+    if (!cached || !Array.isArray(cached.games)) {
+      return null;
+    }
+    return cached.games.find((item) => String(item.id) === String(id)) || null;
+  } catch {
+    return null;
+  }
+}
 
 function ReviewGame() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const game = useMemo(() => location.state?.game || findCachedGameById(id), [id, location.state]);
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/signin', {
+        replace: true,
+        state: { from: `/game/${id}/review`, game },
+      });
+    }
+  }, [authLoading, isAuthenticated, navigate, id, game]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Send review to API
-    console.log({ rating, title, content });
-    navigate(`/game/${id}`);
+    setError('');
+    setSubmitting(true);
+
+    try {
+      await api.createGameReview(id, {
+        rating,
+        title,
+        content,
+        gameTitle: game?.title,
+        gameGenre: game?.genre,
+        gameCoverImage: game?.coverImage,
+        gameDeveloper: game?.developer,
+        gameReleaseDate: game?.releaseDate,
+        gamePlatforms: game?.platforms || [],
+        gameDescription: game?.description,
+      });
+
+      navigate(`/game/${id}`, { state: { game } });
+    } catch (err) {
+      setError(err.message || 'Could not submit review. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (authLoading) {
+    return (
+      <div className="review-game">
+        <p>Checking your session...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="review-game">
       <h1>Write a Review</h1>
+      {game?.title && <p>Reviewing: <strong>{game.title}</strong></p>}
+      {error && <div className="alert alert-error">{error}</div>}
 
       <form onSubmit={handleSubmit} className="review-form">
         <div className="form-group">
@@ -63,18 +127,23 @@ function ReviewGame() {
         </div>
 
         <div className="form-actions">
-          <button type="submit" className="btn btn-primary">
-            Post Review
+              <button type="submit" className="btn btn-primary" disabled={submitting}>
+                {submitting ? 'Posting...' : 'Post Review'}
           </button>
           <button
             type="button"
             className="btn"
             onClick={() => navigate(`/game/${id}`)}
+                disabled={submitting}
           >
             Cancel
           </button>
         </div>
       </form>
+
+          <p className="auth-link">
+            Want to switch account? <Link to="/signin" state={{ from: `/game/${id}/review`, game }}>Sign in</Link>
+          </p>
     </div>
   );
 }

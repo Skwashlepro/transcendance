@@ -27,6 +27,9 @@ function Navigation() {
 					</Link>
 					{user ? (
 						<>
+							<Link to="/chat" className="nav-link">
+								Chat
+							</Link>
 							<Link to={`/profile/${user.username}`} className="nav-link">
 								Profile
 							</Link>

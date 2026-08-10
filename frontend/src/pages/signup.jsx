@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './signup.css';
 
 function Signup() {
 	const navigate = useNavigate();
+	const location = useLocation();
 	const { signup } = useAuth();
 	const [username, setUsername] = useState('');
 	const [email, setEmail] = useState('');
@@ -19,7 +20,7 @@ function Signup() {
 
 		try {
 			await signup(username, email, password);
-			navigate('/play');
+			navigate(location.state?.from || '/play', { replace: true, state: location.state });
 		} catch (err) {
 			setError(err.message);
 		} finally {

@@ -80,6 +80,8 @@ function Profile() {
     ? profile.avatar_url
     : `${API_URL}${profile.avatar_url}`;
 
+  const fallbackAvatar = 'http://localhost:3000/avatars/default-placeholder.svg';
+
   return (
     <div className="profile-page">
       {error && <div className="alert alert-error">{error}</div>}
@@ -87,7 +89,15 @@ function Profile() {
 
       <div className="profile-header">
         <div className="avatar-section">
-          <img src={avatarSrc} alt={`${username}'s avatar`} className="avatar" />
+          <img
+            src={avatarSrc}
+            alt={`${username}'s avatar`}
+            className="avatar"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = fallbackAvatar;
+            }}
+          />
           {isOwnProfile && (
             <>
               <button className="btn-secondary btn-sm" onClick={() => fileInputRef.current?.click()}>

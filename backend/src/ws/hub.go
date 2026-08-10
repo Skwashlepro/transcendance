@@ -79,6 +79,11 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register:
 			h.mu.Lock()
+			if existing, ok := h.clients[client.UserID]; ok && existing != client {
+				// Replace stale duplicate sessions for the same user so events always route to latest tab.
+				close(existing.Send)
+				existing.Conn.Close()
+			}
 			h.clients[client.UserID] = client
 			h.onlineUsers[client.UserID] = true
 			h.mu.Unlock()
@@ -87,14 +92,16 @@ func (h *Hub) Run() {
 
 		case client := <-h.unregister:
 			h.mu.Lock()
-			if _, ok := h.clients[client.UserID]; ok {
+			if current, ok := h.clients[client.UserID]; ok && current == client {
 				delete(h.clients, client.UserID)
 				delete(h.onlineUsers, client.UserID)
 				close(client.Send)
+				h.mu.Unlock()
+				h.notifyOnlineStatus(client.UserID, false)
+				h.handleDisconnect(client.UserID)
+				continue
 			}
 			h.mu.Unlock()
-			h.notifyOnlineStatus(client.UserID, false)
-			h.handleDisconnect(client.UserID)
 
 		case msg := <-h.broadcast:
 			h.dispatch(msg)
@@ -146,6 +153,18 @@ func (h *Hub) sendToUser(userID int, msg BroadcastMsg) {
 	if !ok {
 		return
 	}
+	h.sendToClient(client, msg)
+}
+
+func (h *Hub) sendToUserLocked(userID int, msg BroadcastMsg) {
+	client, ok := h.clients[userID]
+	if !ok {
+		return
+	}
+	h.sendToClient(client, msg)
+}
+
+func (h *Hub) sendToClient(client *Client, msg BroadcastMsg) {
 	data, err := json.Marshal(msg)
 	if err != nil {
 		return
@@ -349,7 +368,7 @@ func (h *Hub) findMatch(userID int, vsAI bool) {
 		g.OnFinish = func(pg *game.PongGame) { h.onGameFinish(pg) }
 		h.games[gameID] = g
 		g.Start()
-		h.sendToUser(userID, BroadcastMsg{
+		h.sendToUserLocked(userID, BroadcastMsg{
 			Type: "game_start",
 			Data: map[string]interface{}{
 				"game_id": gameID,
@@ -384,7 +403,7 @@ func (h *Hub) findMatch(userID int, vsAI bool) {
 		h.games[gameID] = g
 		g.Start()
 
-		h.sendToUser(opponentID, BroadcastMsg{
+		h.sendToUserLocked(opponentID, BroadcastMsg{
 			Type: "game_start",
 			Data: map[string]interface{}{
 				"game_id":  gameID,
@@ -393,7 +412,7 @@ func (h *Hub) findMatch(userID int, vsAI bool) {
 				"opponent": h.getUsername(userID),
 			},
 		})
-		h.sendToUser(userID, BroadcastMsg{
+		h.sendToUserLocked(userID, BroadcastMsg{
 			Type: "game_start",
 			Data: map[string]interface{}{
 				"game_id":  gameID,
@@ -407,7 +426,7 @@ func (h *Hub) findMatch(userID int, vsAI bool) {
 	}
 
 	h.matchQueue = append(h.matchQueue, userID)
-	h.sendToUser(userID, BroadcastMsg{Type: "queue_waiting"})
+	h.sendToUserLocked(userID, BroadcastMsg{Type: "queue_waiting"})
 }
 
 func (h *Hub) removeFromQueue(userID int) {
@@ -518,7 +537,7 @@ func (h *Hub) handleDisconnect(userID int) {
 				opponentID = g.Player1ID
 			}
 			if opponentID > 0 {
-				h.sendToUser(opponentID, BroadcastMsg{
+				h.sendToUserLocked(opponentID, BroadcastMsg{
 					Type: "opponent_disconnected",
 					Data: map[string]interface{}{"game_id": id},
 				})

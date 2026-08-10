@@ -68,7 +68,7 @@ function Chat() {
     }
   }, [username, user, loadConversations]);
 
-  const { send } = useWebSocket(isAuthenticated ? handleWsMessage : null);
+  const { send, connected } = useWebSocket(isAuthenticated ? handleWsMessage : null);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -76,8 +76,29 @@ function Chat() {
 
     const content = newMessage.trim();
     setNewMessage('');
+    setError('');
 
-    send({ type: 'chat', target_user: username, content });
+    if (connected) {
+      send({ type: 'chat', target_user: username, content });
+      return;
+    }
+
+    try {
+      const created = await api.sendMessage(username, content);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: created.id || Date.now(),
+          username: user?.username,
+          content,
+          is_mine: true,
+          created_at: created.created_at,
+        },
+      ]);
+      loadConversations();
+    } catch (e2) {
+      setError(e2.message || 'Could not send message');
+    }
   };
 
   if (!isAuthenticated) {
@@ -113,6 +134,9 @@ function Chat() {
           <>
             <div className="chat-header">
               <Link to={`/profile/${username}`}>{username}</Link>
+              <span className={`socket-status ${connected ? 'online' : 'offline'}`}>
+                {connected ? 'Live' : 'Offline mode'}
+              </span>
             </div>
             {error && <div className="alert alert-error">{error}</div>}
             <div className="chat-messages">

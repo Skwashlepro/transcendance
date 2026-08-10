@@ -91,6 +91,13 @@
   font-size: 1.05rem;
 }
 
+.hero-panel small {
+  display: block;
+  margin-top: 8px;
+  color: var(--text-tertiary);
+  font-size: 0.82rem;
+}
+
 .features {
   margin-bottom: 60px;
 }

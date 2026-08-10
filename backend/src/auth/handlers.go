@@ -1,8 +1,11 @@
 package auth
 
 import (
+	"crypto/rand"
 	"database/sql"
+	"math/big"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -23,6 +26,40 @@ type SigninRequest struct {
 }
 
 var usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_]{3,30}$`)
+
+var fallbackDefaultAvatarURLs = []string{
+	"http://localhost:3000/avatars/default-placeholder.svg",
+}
+
+func chooseRandomDefaultAvatarURL() string {
+	raw := strings.TrimSpace(os.Getenv("DEFAULT_AVATAR_URLS"))
+	pool := make([]string, 0)
+
+	if raw != "" {
+		parts := strings.Split(raw, ",")
+		for _, part := range parts {
+			candidate := strings.TrimSpace(part)
+			if candidate != "" {
+				pool = append(pool, candidate)
+			}
+		}
+	}
+
+	if len(pool) == 0 {
+		pool = fallbackDefaultAvatarURLs
+	}
+
+	if len(pool) == 0 {
+		return "/uploads/avatars/default.png"
+	}
+
+	idx, err := rand.Int(rand.Reader, big.NewInt(int64(len(pool))))
+	if err != nil {
+		return pool[0]
+	}
+
+	return pool[idx.Int64()]
+}
 
 func SignupHandler(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -47,9 +84,10 @@ func SignupHandler(db *sql.DB) gin.HandlerFunc {
 		}
 
 		var userID int
+		defaultAvatarURL := chooseRandomDefaultAvatarURL()
 		err = db.QueryRow(
-			`INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id`,
-			req.Username, req.Email, hash,
+			`INSERT INTO users (username, email, password, avatar_url) VALUES ($1, $2, $3, $4) RETURNING id`,
+			req.Username, req.Email, hash, defaultAvatarURL,
 		).Scan(&userID)
 
 		if err != nil {
