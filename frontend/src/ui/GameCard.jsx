@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import './GameCard.css';
 
 function GameCard({ game }) {
-  const avgRating = game.reviews ? (game.reviews.reduce((acc, r) => acc + r.rating, 0) / game.reviews.length).toFixed(1) : 0;
+  const avgRating = game.reviewScoreDesc || (game.reviews ? (game.reviews.reduce((acc, r) => acc + r.rating, 0) / game.reviews.length).toFixed(1) : 'N/A');
 
   return (
     <Link to={`/game/${game.id}`} className="game-card">
@@ -24,7 +24,7 @@ function GameCard({ game }) {
           <div className="rating">
             ⭐ {avgRating}
           </div>
-          <span className="review-count">{game.reviews?.length || 0} reviews</span>
+          <span className="review-count">{game.totalReviews || game.reviews?.length || 0} reviews</span>
         </div>
       </div>
     </Link>

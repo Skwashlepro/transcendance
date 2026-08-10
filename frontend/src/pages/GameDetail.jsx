@@ -50,6 +50,9 @@ function GameDetail() {
     ? (game.reviews.reduce((acc, r) => acc + r.rating, 0) / game.reviews.length).toFixed(1)
     : 0;
 
+  const screenshots = game.screenshots || [];
+  const reviewLabel = game.reviewScoreDesc || (game.reviewScore ? `${game.reviewScore}/10` : 'No Steam summary');
+
   return (
     <div className="game-detail">
       <div className="game-header">
@@ -65,6 +68,9 @@ function GameDetail() {
           <p className="game-meta">
             <strong>Platforms:</strong> {game.platforms.join(', ')}
           </p>
+          <p className="game-meta">
+            <strong>Steam rating:</strong> {reviewLabel} {game.totalReviews ? `(${game.totalReviews.toLocaleString()} reviews)` : ''}
+          </p>
           <div className="game-actions">
             <button className="btn btn-primary">⭐ {avgRating}</button>
             <Link to={`/game/${game.id}/review`} className="btn btn-primary">
@@ -79,22 +85,38 @@ function GameDetail() {
         <p>{game.description}</p>
       </div>
 
-      <div className="game-reviews">
-        <h2>Reviews ({game.reviews.length})</h2>
-        <div className="reviews-list">
-          {game.reviews.map((review) => (
-            <div key={review.id} className="review-item">
-              <div className="review-header">
-                <Link to={`/profile/${review.author}`} className="review-author">
-                  {review.author}
-                </Link>
-                <span className="review-rating">{'⭐'.repeat(review.rating)}</span>
-                <span className="review-date">{new Date(review.date).toLocaleDateString()}</span>
-              </div>
-              <h4>{review.title}</h4>
-              <p>{review.content}</p>
+      {(game.trailerUrl || screenshots.length > 0) && (
+        <div className="game-media">
+          <h2>Media</h2>
+          {game.trailerUrl && (
+            <div className="media-trailer">
+              <video controls poster={game.coverImage}>
+                <source src={game.trailerUrl} />
+              </video>
             </div>
-          ))}
+          )}
+          {screenshots.length > 0 && (
+            <div className="media-gallery">
+              {screenshots.slice(0, 6).map((image) => (
+                <img key={image} src={image} alt={`${game.title} screenshot`} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="game-reviews">
+        <h2>Steam rating summary</h2>
+        <div className="review-item">
+          <div className="review-header">
+            <span className="review-author">Steam community</span>
+            <span className="review-rating">{game.reviewScore ? `${game.reviewScore}/10` : 'N/A'}</span>
+            <span className="review-date">{game.reviewScoreDesc || 'No rating summary available'}</span>
+          </div>
+          <h4>{game.title}</h4>
+          <p>
+            {game.totalReviews ? `${game.totalReviews.toLocaleString()} Steam reviews are included in this summary.` : 'Steam rating data is unavailable for this title.'}
+          </p>
         </div>
       </div>
     </div>
