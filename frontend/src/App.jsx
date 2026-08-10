@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { AuthProvider } from './context/AuthContext';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navigation from './ui/Navigation';
@@ -9,6 +9,7 @@ import HomePage from './pages/HomePage';
 import BrowseGames from './pages/BrowseGames';
 import GameDetail from './pages/GameDetail';
 import ReviewGame from './pages/ReviewGame';
+import Friends from './friends/Friends';
 import Profile from './pages/Profile';
 import Signin from './pages/Signin';
 import Signup from './pages/signup';
@@ -24,6 +25,7 @@ function App() {
 						<Routes>
 							<Route path="/" element={<HomePage />} />
 							<Route path="/games" element={<BrowseGames />} />
+							<Route path="/friends" element={<Friends />} />
 							<Route path="/game/:id" element={<GameDetail />} />
 							<Route path="/game/:id/review" element={<ReviewGame />} />
 							<Route path="/profile/:username" element={<Profile />} />

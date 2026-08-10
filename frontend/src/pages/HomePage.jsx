@@ -3,17 +3,16 @@ import { Link } from 'react-router-dom';
 import './HomePage.css';
 
 function HomePage() {
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
-
-    fetch("http://localhost:8000/api/test")
+    fetch('http://localhost:8000/api/health')
       .then(response => response.json())
       .then(data => {
-        setMessage(data.message);
+        setMessage(data.message || '');
       })
       .catch(error => {
-        console.log("Backend error:", error);
+        console.log('Backend error:', error);
       });
 
   }, []);
@@ -23,6 +22,7 @@ function HomePage() {
       <section className="hero">
         <h1>GameVault</h1>
         <p>Discover, Review, and Discuss Video Games with the Community</p>
+        {message && <p className="api-status">{message}</p>}
         <Link to="/games" className="btn btn-primary">
           Browse Games
         </Link>
