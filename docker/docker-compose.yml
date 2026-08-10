@@ -3,7 +3,7 @@ services:
     image: postgres:15
     container_name: transcendance-db
     env_file:
-      - ../.env
+      - .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -25,7 +25,7 @@ services:
     build: ../backend
     container_name: transcendance-api
     env_file:
-      - ../.env
+      - .env
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
@@ -35,6 +35,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
       UPLOAD_DIR: /app/uploads
+      GIN_MODE: ${GIN_MODE:-release}
     ports:
       - "8000:8000"
     volumes:
@@ -49,7 +50,7 @@ services:
     build: ../frontend
     container_name: transcendance-frontend
     env_file:
-      - ../.env
+      - .env
     ports:
       - "3000:3000"
     environment:
