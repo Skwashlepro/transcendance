@@ -217,6 +217,54 @@ input:disabled, textarea:disabled {
   cursor: not-allowed;
 }
 
+.page-footer {
+  border-top: 1px solid var(--border-light);
+  background: rgba(15, 15, 15, 0.7);
+}
+
+.page-footer-inner {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 18px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  color: var(--text-secondary);
+}
+
+.footer-links {
+  display: flex;
+  gap: 16px;
+}
+
+.legal-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 0;
+}
+
+.legal-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: var(--shadow-lg);
+}
+
+.legal-card h1,
+.legal-card h2,
+.legal-card h3 {
+  margin-top: 18px;
+}
+
+.legal-card ul,
+.legal-card ol {
+  color: var(--text-secondary);
+  margin-left: 24px;
+  margin-bottom: 16px;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 10px;

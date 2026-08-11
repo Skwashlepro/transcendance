@@ -15,6 +15,8 @@ import Friends from './friends/Friends';
 import Profile from './pages/Profile';
 import Signin from './pages/Signin';
 import Signup from './pages/signup';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 
 function App() {
 	return (
@@ -36,9 +38,21 @@ function App() {
 							<Route path="/profile/:username" element={<Profile />} />
 							<Route path="/signin" element={<Signin />} />
 							<Route path="/signup" element={<Signup />} />
+							<Route path="/privacy-policy" element={<PrivacyPolicy />} />
+							<Route path="/terms" element={<TermsOfService />} />
 							<Route path="*" element={<h1>404 - Not Found</h1>} />
 						</Routes>
 					</main>
+
+					<footer className="page-footer">
+						<div className="page-footer-inner">
+							<span>© 2026 ft_transcendence</span>
+							<div className="footer-links">
+								<a href="/privacy-policy">Privacy Policy</a>
+								<a href="/terms">Terms of Service</a>
+							</div>
+						</div>
+					</footer>
 				</div>
 			</Router>
 		</AuthProvider>

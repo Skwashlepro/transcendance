@@ -13,17 +13,23 @@ function Navigation() {
 				</Link>
 
 				<div className="nav-menu">
-							<Link to="/" className="nav-link">
-								Home
-							</Link>
+					<Link to="/" className="nav-link">
+						Home
+					</Link>
 					<Link to="/games" className="nav-link">
 						Browse Games
 					</Link>
-							<Link to="/play" className="nav-link">
-								Play
-							</Link>
+					<Link to="/play" className="nav-link">
+						Play
+					</Link>
 					<Link to="/friends" className="nav-link">
 						Friends
+					</Link>
+					<Link to="/privacy-policy" className="nav-link">
+						Privacy
+					</Link>
+					<Link to="/terms" className="nav-link">
+						Terms
 					</Link>
 					{user ? (
 						<>
@@ -39,12 +45,12 @@ function Navigation() {
 						</>
 					) : (
 						<>
-									<Link to="/signin" className="nav-link">
-										Sign In
-									</Link>
-									<Link to="/signup" className="nav-link">
-										Sign Up
-									</Link>
+							<Link to="/signin" className="nav-link">
+								Sign In
+							</Link>
+							<Link to="/signup" className="nav-link">
+								Sign Up
+							</Link>
 						</>
 					)}
 				</div>

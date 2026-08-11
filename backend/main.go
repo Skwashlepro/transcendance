@@ -12,6 +12,10 @@ import (
 )
 
 func main() {
+	if os.Getenv("JWT_SECRET") == "" {
+		log.Fatal("JWT_SECRET must be set")
+	}
+
 	db, err := database.Connect()
 	if err != nil {
 		log.Fatal("Database connection failed:", err)
@@ -29,7 +33,9 @@ func main() {
 	if uploadDir == "" {
 		uploadDir = "./uploads"
 	}
-	os.MkdirAll(uploadDir+"/avatars", 0755)
+	if err := os.MkdirAll(uploadDir+"/avatars", 0755); err != nil {
+		log.Fatal("Could not create upload directory:", err)
+	}
 
 	if os.Getenv("GIN_MODE") == "" {
 		gin.SetMode(gin.ReleaseMode)
@@ -43,7 +49,21 @@ func main() {
 	}
 
 	r.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", corsOrigin)
+		origin := c.GetHeader("Origin")
+		if origin != "" {
+			allowed := false
+			for _, item := range []string{corsOrigin, "http://localhost:3000", "http://127.0.0.1:3000"} {
+				if item != "" && origin == item {
+					allowed = true
+					break
+				}
+			}
+			if allowed {
+				c.Header("Access-Control-Allow-Origin", origin)
+			}
+		} else {
+			c.Header("Access-Control-Allow-Origin", corsOrigin)
+		}
 		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		if c.Request.Method == "OPTIONS" {
