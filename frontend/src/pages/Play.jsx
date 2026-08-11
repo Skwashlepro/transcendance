@@ -117,9 +117,9 @@ function Play() {
     return (
       <div className="play-page">
         <div className="play-card">
-          <h1>Play Pong</h1>
-          <p>Sign in to play multiplayer Pong</p>
-          <button className="btn-primary" onClick={() => navigate('/signin')}>Sign In</button>
+          <h1>{t('play.title')}</h1>
+          <p>{t('play.signInPrompt')}</p>
+          <button className="btn-primary" onClick={() => navigate('/signin')}>{t('auth.signIn')}</button>
         </div>
       </div>
     );
@@ -210,7 +210,7 @@ function Play() {
                 return (
                   <li key={match.id}>
                     <div>
-                      <strong>{didWin ? 'Win' : 'Loss'}</strong>
+                      <strong>{didWin ? t('profile.win') : t('profile.loss')}</strong>
                       <span>{t('play.vs')} {opponent || 'AI'}{match.is_ai ? ' (AI)' : ''}</span>
                     </div>
                     <div className="history-score">{myScore} - {oppScore}</div>

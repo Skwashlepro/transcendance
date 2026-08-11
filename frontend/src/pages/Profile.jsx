@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../i18n';
 import { api, API_URL } from '../utils/api';
 import './Profile.css';
 
 function Profile() {
   const { username } = useParams();
   const { user, isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [matches, setMatches] = useState([]);
@@ -61,7 +63,7 @@ function Profile() {
       await api.updateProfile(bio);
       setProfile((p) => ({ ...p, bio }));
       setEditing(false);
-      setSuccess('Profile updated');
+      setSuccess(t('profile.profileUpdated'));
       setTimeout(() => setSuccess(''), 3000);
     } catch (e) {
       setError(e.message);
@@ -74,7 +76,7 @@ function Profile() {
     try {
       const data = await api.uploadAvatar(file);
       setProfile((p) => ({ ...p, avatar_url: data.avatar_url }));
-      setSuccess('Avatar updated');
+      setSuccess(t('profile.avatarUpdated'));
       setTimeout(() => setSuccess(''), 3000);
     } catch (e) {
       setError(e.message);
@@ -93,7 +95,12 @@ function Profile() {
     ? profile.avatar_url
     : `${API_URL}${profile.avatar_url}`;
 
-  const fallbackAvatar = 'http://localhost:3000/avatars/default-placeholder.svg';
+  const fallbackAvatar = '/uploads/avatars/default-placeholder.svg';
+
+  const visibleLeaderboard = (leaderboard || []).filter((entry) => {
+    const placeholderNames = new Set(['dsa', 'asd', 'root', 'guest', 'player', 'placeholder', 'test', 'admin']);
+    return entry && entry.username && !placeholderNames.has(String(entry.username).trim().toLowerCase());
+  });
 
   return (
     <div className="profile-page">
@@ -114,7 +121,7 @@ function Profile() {
           {isOwnProfile && (
             <>
               <button className="btn-secondary btn-sm" onClick={() => fileInputRef.current?.click()}>
-                Change Avatar
+                {t('profile.changeAvatar')}
               </button>
               <input
                 ref={fileInputRef}
@@ -129,13 +136,13 @@ function Profile() {
         <div className="profile-info">
           <h1>{profile.username}</h1>
           <div className="stats">
-            <span className="stat"><strong>{profile.wins}</strong> Wins</span>
-            <span className="stat"><strong>{profile.losses}</strong> Losses</span>
-            <span className="stat"><strong>Lv {profile.level || 1}</strong> Level</span>
+            <span className="stat"><strong>{profile.wins}</strong> {t('profile.wins')}</span>
+            <span className="stat"><strong>{profile.losses}</strong> {t('profile.losses')}</span>
+            <span className="stat"><strong>Lv {profile.level || 1}</strong> {t('profile.level')}</span>
           </div>
           <div className="progress-block">
             <div className="progress-row">
-              <span>XP</span>
+              <span>{t('profile.xp')}</span>
               <strong>{profile.xp || 0}</strong>
             </div>
             <div className="progress-bar">
@@ -147,23 +154,23 @@ function Profile() {
               <div className="bio-edit">
                 <textarea value={bio} onChange={(e) => setBio(e.target.value)} maxLength={500} rows={3} />
                 <div className="bio-actions">
-                  <button className="btn-primary btn-sm" onClick={handleSaveBio}>Save</button>
-                  <button className="btn-secondary btn-sm" onClick={() => setEditing(false)}>Cancel</button>
+                  <button className="btn-primary btn-sm" onClick={handleSaveBio}>{t('profile.save')}</button>
+                  <button className="btn-secondary btn-sm" onClick={() => setEditing(false)}>{t('profile.cancel')}</button>
                 </div>
               </div>
             ) : (
               <div className="bio-display">
-                <p>{profile.bio || 'No bio yet'}</p>
-                <button className="btn-secondary btn-sm" onClick={() => setEditing(true)}>Edit Bio</button>
+                <p>{profile.bio || t('profile.noBio')}</p>
+                <button className="btn-secondary btn-sm" onClick={() => setEditing(true)}>{t('profile.editBio')}</button>
               </div>
             )
           ) : (
             <>
-              <p className="bio">{profile.bio || 'No bio yet'}</p>
+              <p className="bio">{profile.bio || t('profile.noBio')}</p>
               {isAuthenticated && (
                 <div className="profile-actions">
-                  <Link to={`/chat/${username}`} className="btn-primary btn-sm">Message</Link>
-                  <button className="btn-secondary btn-sm" onClick={() => navigate('/play')}>Challenge</button>
+                  <Link to={`/chat/${username}`} className="btn-primary btn-sm">{t('profile.message')}</Link>
+                  <button className="btn-secondary btn-sm" onClick={() => navigate('/play')}>{t('profile.challenge')}</button>
                 </div>
               )}
             </>
@@ -173,7 +180,7 @@ function Profile() {
 
       <div className="profile-panels">
         <section className="profile-panel achievements-panel">
-          <h2>Achievements</h2>
+          <h2>{t('profile.achievements')}</h2>
           {Array.isArray(profile.achievements) && profile.achievements.length > 0 ? (
             <div className="achievement-grid">
               {profile.achievements.map((achievement) => (
@@ -187,17 +194,17 @@ function Profile() {
               ))}
             </div>
           ) : (
-            <p className="empty-state">No achievements unlocked yet</p>
+            <p className="empty-state">{t('profile.noAchievements')}</p>
           )}
         </section>
 
         <section className="profile-panel leaderboard-panel">
-          <h2>Leaderboard</h2>
-          {leaderboard.length === 0 ? (
-            <p className="empty-state">No leaderboard data yet</p>
+          <h2>{t('profile.leaderboard')}</h2>
+          {visibleLeaderboard.length === 0 ? (
+            <p className="empty-state">{t('profile.noLeaderboard')}</p>
           ) : (
             <ol className="leaderboard-list">
-              {leaderboard.map((entry, index) => (
+              {visibleLeaderboard.map((entry, index) => (
                 <li key={`${entry.username}-${index}`} className={entry.username === username ? 'rank-self' : ''}>
                   <span>#{index + 1} {entry.username}</span>
                   <strong>{entry.wins}W · Lv {entry.level}</strong>
@@ -209,17 +216,17 @@ function Profile() {
       </div>
 
       <section className="match-history">
-        <h2>Match History</h2>
+        <h2>{t('profile.matchHistory')}</h2>
         {matches.length === 0 ? (
-          <p className="empty-state">No matches played yet</p>
+          <p className="empty-state">{t('profile.noMatches')}</p>
         ) : (
           <table className="matches-table">
             <thead>
               <tr>
-                <th>Opponent</th>
-                <th>Score</th>
-                <th>Result</th>
-                <th>Date</th>
+                <th>{t('profile.opponent')}</th>
+                <th>{t('profile.score')}</th>
+                <th>{t('profile.result')}</th>
+                <th>{t('profile.date')}</th>
               </tr>
             </thead>
             <tbody>
@@ -233,7 +240,7 @@ function Profile() {
                   <tr key={m.id}>
                     <td>{opponent}{m.is_ai && ' (AI)'}</td>
                     <td>{myScore} - {oppScore}</td>
-                    <td className={won ? 'win' : 'loss'}>{won ? 'Win' : 'Loss'}</td>
+                    <td className={won ? 'win' : 'loss'}>{won ? t('profile.win') : t('profile.loss')}</td>
                     <td>{new Date(m.created_at).toLocaleDateString()}</td>
                   </tr>
                 );

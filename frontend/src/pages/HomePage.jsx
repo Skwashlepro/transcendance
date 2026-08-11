@@ -127,7 +127,7 @@ function HomePage() {
             {isAuthenticated ? (
               <>
                 <strong>{onlineCount}/{friends.length} {t('home.onlineOf')}, {pendingCount} {t('home.pending')}</strong>
-                <small>Presence updates in realtime</small>
+                <small>{t('home.presenceUpdates')}</small>
               </>
             ) : (
               <>

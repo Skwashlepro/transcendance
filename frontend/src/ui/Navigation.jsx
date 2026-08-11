@@ -29,12 +29,6 @@ function Navigation() {
 					<NavLink to="/friends" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
 						{t('nav.friends')}
 					</NavLink>
-					<NavLink to="/privacy-policy" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-						{t('nav.privacy')}
-					</NavLink>
-					<NavLink to="/terms" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-						{t('nav.terms')}
-					</NavLink>
 					{user ? (
 						<>
 							<NavLink to="/chat" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>

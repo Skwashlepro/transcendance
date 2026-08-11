@@ -16,44 +16,11 @@ import Friends from './friends/Friends';
 import Profile from './pages/Profile';
 import Signin from './pages/Signin';
 import Signup from './pages/signup';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
 
 const CONSENT_KEY = 'ft_transcendence_legal_consent';
 
-function PrivacySnippet() {
-  const { t } = useTranslation();
-  return (
-    <div className="legal-snippet">
-      <h3>{t('legal.privacyPolicy')}</h3>
-      <p>We only collect the minimum personal information needed to operate your account, profile, friend list, and chat features securely.</p>
-      <ul>
-        <li>Account and login details</li>
-        <li>Profile and avatar data</li>
-        <li>Match statistics and chat history</li>
-      </ul>
-    </div>
-  );
-}
-
-function TermsSnippet() {
-  const { t } = useTranslation();
-  return (
-    <div className="legal-snippet">
-      <h3>{t('legal.termsOfService')}</h3>
-      <p>You agree to use the platform responsibly, keep your account secure, and avoid abusive or harmful behavior.</p>
-      <ul>
-        <li>Respect other players and keep accounts safe</li>
-        <li>Do not abuse social or game systems</li>
-        <li>Understand that the service may change or be unavailable during maintenance</li>
-      </ul>
-    </div>
-  );
-}
-
 function LegalConsentModal({ onAccept, onDecline }) {
   const { t } = useTranslation();
-  const [tab, setTab] = useState('privacy');
 
   return (
     <div className="legal-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="legal-title" aria-describedby="legal-description">
@@ -63,29 +30,26 @@ function LegalConsentModal({ onAccept, onDecline }) {
           <p id="legal-description">{t('legal.subtitle')}</p>
         </div>
 
-        <div className="legal-modal-tabs" role="tablist" aria-label={t('aria.legalConsent')}>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'privacy'}
-            className={tab === 'privacy' ? 'active' : ''}
-            onClick={() => setTab('privacy')}
-          >
-            {t('legal.privacyPolicy')}
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === 'terms'}
-            className={tab === 'terms' ? 'active' : ''}
-            onClick={() => setTab('terms')}
-          >
-            {t('legal.termsOfService')}
-          </button>
-        </div>
-
         <div className="legal-modal-body">
-          {tab === 'privacy' ? <PrivacySnippet /> : <TermsSnippet />}
+          <div className="legal-snippet">
+            <h3>{t('legal.privacyPolicy')}</h3>
+            <p>We only collect the minimum personal information needed to operate your account, profile, friend list, and chat features securely.</p>
+            <ul>
+              <li>Account and login details</li>
+              <li>Profile and avatar data</li>
+              <li>Match statistics and chat history</li>
+            </ul>
+          </div>
+
+          <div className="legal-snippet">
+            <h3>{t('legal.termsOfService')}</h3>
+            <p>You agree to use the platform responsibly, keep your account secure, and avoid abusive or harmful behavior.</p>
+            <ul>
+              <li>Respect other players and keep accounts safe</li>
+              <li>Do not abuse social or game systems</li>
+              <li>Understand that the service may change or be unavailable during maintenance</li>
+            </ul>
+          </div>
         </div>
 
         <div className="legal-modal-actions">
@@ -163,21 +127,9 @@ function AppShell() {
           <Route path="/profile/:username" element={<Profile />} />
           <Route path="/signin" element={<Signin />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<TermsOfService />} />
           <Route path="*" element={<h1>{t('misc.notFound')}</h1>} />
         </Routes>
       </main>
-
-      <footer className="page-footer">
-        <div className="page-footer-inner">
-          <span>© 2026 ft_transcendence</span>
-          <div className="footer-links">
-            <a href="/privacy-policy">{t('misc.privacy')}</a>
-            <a href="/terms">{t('misc.terms')}</a>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
