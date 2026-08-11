@@ -9,8 +9,18 @@ CREATE TABLE IF NOT EXISTS users (
     bio         TEXT         DEFAULT '',
     wins        INTEGER      DEFAULT 0,
     losses      INTEGER      DEFAULT 0,
+    xp          INTEGER      DEFAULT 0,
+    level       INTEGER      DEFAULT 1,
     created_at  TIMESTAMPTZ  DEFAULT NOW(),
     last_seen   TIMESTAMPTZ  DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS user_achievements (
+    id              SERIAL PRIMARY KEY,
+    user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    achievement_key VARCHAR(40) NOT NULL,
+    unlocked_at     TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, achievement_key)
 );
 
 CREATE TABLE IF NOT EXISTS friendships (
@@ -72,6 +82,7 @@ CREATE INDEX IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
 CREATE INDEX IF NOT EXISTS idx_messages_pair ON messages(sender_id, receiver_id);
 CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at);
 CREATE INDEX IF NOT EXISTS idx_matches_players ON matches(player1_id, player2_id);
+CREATE INDEX IF NOT EXISTS idx_user_achievements_user ON user_achievements(user_id);
 CREATE INDEX IF NOT EXISTS idx_games_genre ON games(genre);
 CREATE INDEX IF NOT EXISTS idx_games_title ON games(title);
 CREATE INDEX IF NOT EXISTS idx_game_reviews_game ON game_reviews(game_id);

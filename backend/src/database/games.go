@@ -4,6 +4,16 @@ import "database/sql"
 
 func EnsureGamesSchema(db *sql.DB) error {
 	statements := []string{
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS xp INTEGER NOT NULL DEFAULT 0`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS level INTEGER NOT NULL DEFAULT 1`,
+		`CREATE TABLE IF NOT EXISTS user_achievements (
+			id              SERIAL PRIMARY KEY,
+			user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			achievement_key VARCHAR(40) NOT NULL,
+			unlocked_at     TIMESTAMPTZ DEFAULT NOW(),
+			UNIQUE(user_id, achievement_key)
+		)`,
+		`CREATE INDEX IF NOT EXISTS idx_user_achievements_user ON user_achievements(user_id)`,
 		`CREATE TABLE IF NOT EXISTS games (
 			id              SERIAL PRIMARY KEY,
 			title           VARCHAR(120) NOT NULL UNIQUE,

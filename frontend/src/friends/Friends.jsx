@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { useTranslation } from '../i18n';
 import './Friends.css';
 
 function Friends() {
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const [friends, setFriends] = useState([]);
   const [pending, setPending] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -96,28 +98,28 @@ function Friends() {
   if (!isAuthenticated) {
     return (
       <div className="friends-page">
-        <p>Please <Link to="/signin">sign in</Link> to manage friends.</p>
+        <p>{t('misc.signInPrompt')} <Link to="/signin">{t('auth.signIn')}</Link> {t('misc.toManageFriends')}</p>
       </div>
     );
   }
 
   return (
     <div className="friends-page">
-      <h1>Friends</h1>
+      <h1>{t('nav.friends')}</h1>
 
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
 
       <section className="friends-section">
-        <h2>Add Friend</h2>
+        <h2>{t('friends.addFriend')}</h2>
         <form onSubmit={handleSearch} className="search-form">
           <input
             type="text"
-            placeholder="Search by username..."
+            placeholder={t('friends.searchByUsername')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <button type="submit" className="btn-primary">Search</button>
+          <button type="submit" className="btn-primary">{t('friends.search')}</button>
         </form>
         {searchResults.length > 0 && (
           <ul className="search-results">
@@ -125,7 +127,7 @@ function Friends() {
               <li key={u.id}>
                 <Link to={`/profile/${u.username}`}>{u.username}</Link>
                 <button className="btn-secondary btn-sm" onClick={() => handleAddFriend(u.username)}>
-                  Add
+                  {t('friends.add')}
                 </button>
               </li>
             ))}
@@ -135,13 +137,13 @@ function Friends() {
 
       {pending.length > 0 && (
         <section className="friends-section">
-          <h2>Pending Requests</h2>
+          <h2>{t('friends.pendingRequests')}</h2>
           <ul className="friends-list">
             {pending.map((r) => (
               <li key={r.request_id}>
                 <Link to={`/profile/${r.username}`}>{r.username}</Link>
                 <button className="btn-primary btn-sm" onClick={() => handleAccept(r.request_id)}>
-                  Accept
+                  {t('friends.accept')}
                 </button>
               </li>
             ))}
@@ -150,18 +152,18 @@ function Friends() {
       )}
 
       <section className="friends-section">
-        <h2>Your Friends ({friends.length})</h2>
+        <h2>{t('friends.yourFriends')} ({friends.length})</h2>
         {friends.length === 0 ? (
-          <p className="empty-state">No friends yet. Search for users above!</p>
+          <p className="empty-state">{t('friends.empty')}</p>
         ) : (
           <ul className="friends-list">
             {friends.map((f) => (
               <li key={f.id}>
                 <span className={`status-dot ${f.online ? 'online' : 'offline'}`} />
                 <Link to={`/profile/${f.username}`}>{f.username}</Link>
-                <Link to={`/chat/${f.username}`} className="btn-secondary btn-sm">Chat</Link>
+                <Link to={`/chat/${f.username}`} className="btn-secondary btn-sm">{t('nav.chat')}</Link>
                 <button className="btn-danger btn-sm" onClick={() => handleRemove(f.username)}>
-                  Remove
+                  {t('friends.remove')}
                 </button>
               </li>
             ))}

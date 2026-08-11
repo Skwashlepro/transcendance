@@ -9,13 +9,16 @@ function PongGame({ gameState, side, onInput }) {
   const keysRef = useRef({ up: false, down: false });
 
   const handleKeyDown = useCallback((e) => {
-    if (e.key === 'w' || e.key === 'ArrowUp') keysRef.current.up = true;
-    if (e.key === 's' || e.key === 'ArrowDown') keysRef.current.down = true;
+    if (['w', 'W', 'ArrowUp'].includes(e.key)) keysRef.current.up = true;
+    if (['s', 'S', 'ArrowDown'].includes(e.key)) keysRef.current.down = true;
+    if (['w', 'W', 's', 'S', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+      e.preventDefault();
+    }
   }, []);
 
   const handleKeyUp = useCallback((e) => {
-    if (e.key === 'w' || e.key === 'ArrowUp') keysRef.current.up = false;
-    if (e.key === 's' || e.key === 'ArrowDown') keysRef.current.down = false;
+    if (['w', 'W', 'ArrowUp'].includes(e.key)) keysRef.current.up = false;
+    if (['s', 'S', 'ArrowDown'].includes(e.key)) keysRef.current.down = false;
   }, []);
 
   useEffect(() => {
@@ -30,8 +33,9 @@ function PongGame({ gameState, side, onInput }) {
   useEffect(() => {
     const interval = setInterval(() => {
       let direction = 0;
-      if (keysRef.current.up) direction = -1;
-      if (keysRef.current.down) direction = 1;
+      if (keysRef.current.up && !keysRef.current.down) direction = -1;
+      if (keysRef.current.down && !keysRef.current.up) direction = 1;
+      if (keysRef.current.up && keysRef.current.down) direction = 0;
       onInput(direction);
     }, 16);
     return () => clearInterval(interval);
@@ -118,6 +122,8 @@ function PongGame({ gameState, side, onInput }) {
         height={FIELD_H}
         className="pong-canvas"
         tabIndex={0}
+        role="img"
+        aria-label="Pong game area"
       />
       <p className="pong-controls">Use W/S or Arrow keys to move your paddle</p>
     </div>

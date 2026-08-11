@@ -84,11 +84,66 @@ func SaveMatch(db *sql.DB, player1ID int, player2ID *int, score1, score2 int, wi
 		if player2ID != nil && *player2ID != *winnerID {
 			loserID = *player2ID
 		} else if player2ID == nil && player1ID == *winnerID {
-			// AI lost, no user loser to update
+			if err := syncUserProgress(db, player1ID); err != nil {
+				return err
+			}
 			return nil
 		}
 		if loserID != *winnerID {
 			_, _ = db.Exec(`UPDATE users SET losses = losses + 1 WHERE id = $1`, loserID)
+		}
+		if err := syncUserProgress(db, *winnerID); err != nil {
+			return err
+		}
+		if loserID != *winnerID {
+			if err := syncUserProgress(db, loserID); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	if player2ID == nil {
+		_, _ = db.Exec(`UPDATE users SET losses = losses + 1 WHERE id = $1`, player1ID)
+		return syncUserProgress(db, player1ID)
+	}
+
+	_, _ = db.Exec(`UPDATE users SET losses = losses + 1 WHERE id = $1`, player1ID)
+	_, _ = db.Exec(`UPDATE users SET wins = wins + 1 WHERE id = $1`, *player2ID)
+	if err := syncUserProgress(db, player1ID); err != nil {
+		return err
+	}
+	return syncUserProgress(db, *player2ID)
+}
+
+func syncUserProgress(db *sql.DB, userID int) error {
+	var wins, losses int
+	if err := db.QueryRow(`SELECT wins, losses FROM users WHERE id = $1`, userID).Scan(&wins, &losses); err != nil {
+		return err
+	}
+
+	totalMatches := wins + losses
+	xp := wins*150 + totalMatches*20
+	level := 1 + xp/250
+	if _, err := db.Exec(`UPDATE users SET xp = $1, level = $2 WHERE id = $3`, xp, level, userID); err != nil {
+		return err
+	}
+
+	achievements := []struct {
+		key string
+		ok  bool
+	}{
+		{key: "first_match", ok: totalMatches >= 1},
+		{key: "first_win", ok: wins >= 1},
+		{key: "duelist", ok: wins >= 3},
+		{key: "champion", ok: wins >= 10},
+		{key: "grinder", ok: totalMatches >= 20},
+	}
+	for _, item := range achievements {
+		if item.ok {
+			if _, err := db.Exec(`INSERT INTO user_achievements (user_id, achievement_key) VALUES ($1, $2) ON CONFLICT DO NOTHING`, userID, item.key); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

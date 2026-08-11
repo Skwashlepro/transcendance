@@ -1,10 +1,12 @@
 import React from 'react';
+import { useTranslation } from '../i18n';
 
 function TermsOfService() {
+  const { t } = useTranslation();
   return (
     <div className="legal-page">
       <div className="legal-card">
-        <h1>Terms of Service</h1>
+        <h1>{t('legal.termsOfService')}</h1>
         <p>By using this platform, you agree to use the service in a safe, respectful, and lawful manner.</p>
 
         <h2>Account responsibilities</h2>

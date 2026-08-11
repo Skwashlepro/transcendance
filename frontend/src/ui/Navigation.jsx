@@ -1,58 +1,70 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation, getAvailableLanguages } from '../i18n';
 import './Navigation.css';
 
 function Navigation() {
 	const { user, logout } = useAuth();
+	const { t, locale, setLocale } = useTranslation();
+	const languages = getAvailableLanguages();
+
 	return (
-		<nav className="navbar">
+		<nav className="navbar" aria-label={t('nav.language')}>
 			<div className="navbar-container">
-				<Link to="/" className="navbar-logo">
+				<Link to="/" className="navbar-logo" aria-label={t('app.title')}>
 					GameVault
 				</Link>
 
 				<div className="nav-menu">
-					<Link to="/" className="nav-link">
-						Home
-					</Link>
-					<Link to="/games" className="nav-link">
-						Browse Games
-					</Link>
-					<Link to="/play" className="nav-link">
-						Play
-					</Link>
-					<Link to="/friends" className="nav-link">
-						Friends
-					</Link>
-					<Link to="/privacy-policy" className="nav-link">
-						Privacy
-					</Link>
-					<Link to="/terms" className="nav-link">
-						Terms
-					</Link>
+					<NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} end>
+						{t('nav.home')}
+					</NavLink>
+					<NavLink to="/games" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+						{t('nav.games')}
+					</NavLink>
+					<NavLink to="/play" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+						{t('nav.play')}
+					</NavLink>
+					<NavLink to="/friends" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+						{t('nav.friends')}
+					</NavLink>
+					<NavLink to="/privacy-policy" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+						{t('nav.privacy')}
+					</NavLink>
+					<NavLink to="/terms" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+						{t('nav.terms')}
+					</NavLink>
 					{user ? (
 						<>
-							<Link to="/chat" className="nav-link">
-								Chat
-							</Link>
-							<Link to={`/profile/${user.username}`} className="nav-link">
-								Profile
-							</Link>
-							<button className="nav-link logout-btn" onClick={logout}>
-								Logout
+							<NavLink to="/chat" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+								{t('nav.chat')}
+							</NavLink>
+							<NavLink to={`/profile/${user.username}`} className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+								{t('nav.profile')}
+							</NavLink>
+							<button className="nav-link logout-btn" onClick={logout} aria-label={t('nav.logout')}>
+								{t('nav.logout')}
 							</button>
 						</>
 					) : (
 						<>
-							<Link to="/signin" className="nav-link">
-								Sign In
-							</Link>
-							<Link to="/signup" className="nav-link">
-								Sign Up
-							</Link>
+							<NavLink to="/signin" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+								{t('nav.signin')}
+							</NavLink>
+							<NavLink to="/signup" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+								{t('nav.signup')}
+							</NavLink>
 						</>
 					)}
+					<label className="language-picker" aria-label={t('aria.languageSelector')}>
+						<span>{t('nav.language')}</span>
+						<select value={locale} onChange={(e) => setLocale(e.target.value)} aria-label={t('nav.language')}>
+							{languages.map((lang) => (
+								<option key={lang} value={lang}>{lang.toUpperCase()}</option>
+							))}
+						</select>
+					</label>
 				</div>
 			</div>
 		</nav>

@@ -63,6 +63,7 @@ export const api = {
   me: () => request('/api/auth/me'),
 
   getProfile: (username) => request(`/api/users/${username}`),
+  getLeaderboard: () => request('/api/users/leaderboard'),
 
   updateProfile: (bio) =>
     request('/api/users/profile', {

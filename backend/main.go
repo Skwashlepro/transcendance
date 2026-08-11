@@ -89,6 +89,7 @@ func main() {
 		users := api.Group("/users")
 		{
 			users.GET("/search", auth.AuthMiddleware(), handlers.SearchUsersHandler(db))
+			users.GET("/leaderboard", handlers.GetLeaderboardHandler(db))
 			users.GET("/:username", handlers.GetProfileHandler(db))
 			users.PUT("/profile", auth.AuthMiddleware(), handlers.UpdateProfileHandler(db))
 			users.POST("/avatar", auth.AuthMiddleware(), handlers.UploadAvatarHandler(db))

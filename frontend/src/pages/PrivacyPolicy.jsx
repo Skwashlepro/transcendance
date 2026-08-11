@@ -1,10 +1,12 @@
 import React from 'react';
+import { useTranslation } from '../i18n';
 
 function PrivacyPolicy() {
+  const { t } = useTranslation();
   return (
     <div className="legal-page">
       <div className="legal-card">
-        <h1>Privacy Policy</h1>
+        <h1>{t('legal.privacyPolicy')}</h1>
         <p>We collect the minimum information required to operate the platform safely and provide core social features.</p>
 
         <h2>Information we process</h2>

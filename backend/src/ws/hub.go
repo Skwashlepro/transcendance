@@ -88,6 +88,7 @@ func (h *Hub) Run() {
 			h.onlineUsers[client.UserID] = true
 			h.mu.Unlock()
 			h.notifyOnlineStatus(client.UserID, true)
+			h.replayCurrentGameState(client)
 			_, _ = h.db.Exec(`UPDATE users SET last_seen = NOW() WHERE id = $1`, client.UserID)
 
 		case client := <-h.unregister:
@@ -459,6 +460,32 @@ func (h *Hub) broadcastGameState(gameID string) {
 		if g.Player2ID > 0 {
 			h.sendToUser(g.Player2ID, msg)
 		}
+	}
+}
+
+func (h *Hub) replayCurrentGameState(client *Client) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	for _, g := range h.games {
+		if g.Player1ID != client.UserID && g.Player2ID != client.UserID {
+			continue
+		}
+		side := 1
+		if g.Player2ID == client.UserID {
+			side = 2
+		}
+		h.sendToClient(client, BroadcastMsg{
+			Type: "game_start",
+			Data: map[string]interface{}{
+				"game_id":  g.ID,
+				"side":     side,
+				"is_ai":    g.IsAI,
+				"opponent": h.getUsername(g.Player2ID),
+			},
+		})
+		h.sendToClient(client, BroadcastMsg{Type: "game_state", Data: g.GetState()})
+		return
 	}
 }
 

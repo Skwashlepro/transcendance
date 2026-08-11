@@ -3,6 +3,7 @@ import { getWsUrl } from '../utils/api';
 
 export function useWebSocket(onMessage) {
   const wsRef = useRef(null);
+  const retryTimerRef = useRef(null);
   const [connected, setConnected] = useState(false);
   const onMessageRef = useRef(onMessage);
   onMessageRef.current = onMessage;
@@ -16,12 +17,23 @@ export function useWebSocket(onMessage) {
     const ws = new WebSocket(url);
     wsRef.current = ws;
 
-    ws.onopen = () => setConnected(true);
+    ws.onopen = () => {
+      setConnected(true);
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
+    };
     ws.onclose = () => {
       setConnected(false);
-      setTimeout(connect, 3000);
+      if (!retryTimerRef.current) {
+        retryTimerRef.current = setTimeout(connect, 3000);
+      }
     };
-    ws.onerror = () => ws.close();
+    ws.onerror = () => {
+      setConnected(false);
+      ws.close();
+    };
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
@@ -35,10 +47,16 @@ export function useWebSocket(onMessage) {
   const send = useCallback((msg) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(msg));
+      return true;
     }
+    return false;
   }, []);
 
   const disconnect = useCallback(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
     if (wsRef.current) {
       wsRef.current.onclose = null;
       wsRef.current.close();
@@ -52,5 +70,5 @@ export function useWebSocket(onMessage) {
     return () => disconnect();
   }, [connect, disconnect]);
 
-  return { connected, send, disconnect };
+  return { connected, send, disconnect, reconnect: connect };
 }

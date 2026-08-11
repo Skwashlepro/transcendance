@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../i18n';
 import './signup.css';
 
 function Signup() {
 	const navigate = useNavigate();
 	const location = useLocation();
 	const { signup } = useAuth();
+	const { t } = useTranslation();
 	const [username, setUsername] = useState('');
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
@@ -31,11 +33,11 @@ function Signup() {
 	return (
 		<div className="auth-page">
 			<div className="auth-card">
-				<h2>Sign Up</h2>
+				<h2>{t('auth.signUp')}</h2>
 				{error && <div className="alert alert-error">{error}</div>}
 				<form onSubmit={handleSubmit}>
 					<div className="form-group">
-						<label htmlFor="username">Username</label>
+						<label htmlFor="username">{t('auth.username')}</label>
 						<input
 							type="text"
 							id="username"
@@ -46,7 +48,7 @@ function Signup() {
 						/>
 					</div>
 					<div className="form-group">
-						<label htmlFor="email">Email</label>
+						<label htmlFor="email">{t('auth.email')}</label>
 						<input
 							type="email"
 							id="email"
@@ -57,7 +59,7 @@ function Signup() {
 						/>
 					</div>
 					<div className="form-group">
-						<label htmlFor="password">Password</label>
+						<label htmlFor="password">{t('auth.password')}</label>
 						<input
 							type="password"
 							id="password"
@@ -69,11 +71,11 @@ function Signup() {
 						/>
 					</div>
 					<button type="submit" disabled={loading} className="btn-primary">
-						{loading ? 'Creating account...' : 'Sign Up'}
+						{loading ? t('auth.creatingAccount') : t('auth.signUp')}
 					</button>
 				</form>
 				<div className="auth-link">
-					<p>Already have an account? <Link to="/signin">Sign In</Link></p>
+					<p>{t('auth.haveAccount')} <Link to="/signin">{t('auth.signIn')}</Link></p>
 				</div>
 			</div>
 		</div>

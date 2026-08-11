@@ -65,8 +65,8 @@ func NewPongGame(id string, player1ID int, player2ID int, isAI bool) *PongGame {
 		Player2ID:  player2ID,
 		IsAI:       isAI,
 		StopCh:     make(chan struct{}),
-		AIReaction: 0.08,
-		AIError:    25.0,
+		AIReaction: 0.18,
+		AIError:    70.0,
 	}
 	g.resetState()
 	return g
@@ -207,17 +207,18 @@ func (g *PongGame) loop() {
 
 func (g *PongGame) updateAI() {
 	paddleCenter := g.State.Paddle2.Y + PaddleHeight/2
-	ballCenter := g.State.Ball.Y + BallSize/2
+	ballX := g.State.Ball.X
+	ballY := g.State.Ball.Y
+	ballVY := g.State.Ball.VY
+	ballVX := g.State.Ball.VX
 
-	// Predict where ball will be when it reaches the right paddle
-	targetY := ballCenter
-	if g.State.Ball.VX > 0 {
-		// Ball moving toward AI paddle - simple prediction
-		distToPaddle := (FieldWidth - PaddleWidth) - g.State.Ball.X
-		if g.State.Ball.VX != 0 {
-			timeToReach := distToPaddle / g.State.Ball.VX
-			predictedY := g.State.Ball.Y + g.State.Ball.VY*timeToReach
-			// Bounce simulation (simplified)
+	targetY := ballY + BallSize/2
+
+	if ballVX > 0 {
+		distToPaddle := (FieldWidth - PaddleWidth) - ballX
+		if distToPaddle > 0 && ballVX != 0 {
+			timeToReach := distToPaddle / ballVX
+			predictedY := ballY + ballVY*timeToReach
 			for predictedY < 0 || predictedY > FieldHeight-BallSize {
 				if predictedY < 0 {
 					predictedY = -predictedY
@@ -229,17 +230,33 @@ func (g *PongGame) updateAI() {
 		}
 	}
 
-	// Add imperfection
-	errorOffset := (float64(time.Now().UnixNano()%100)/100 - 0.5) * 2 * g.AIError
-	targetY += errorOffset
+	// Human-like inaccuracy: AI predicts the ball late and misses by a visible amount.
+	variance := math.Sin(float64(time.Now().UnixNano()) * 0.0000007) * g.AIError
+	targetY += variance
+
+	// Occasionally make a small timing mistake and chase the wrong vertical position.
+	if time.Now().UnixNano()%11 == 0 {
+		targetY += 28.0
+	}
+	if time.Now().UnixNano()%17 == 0 {
+		targetY -= 18.0
+	}
+
+	// Clamp to field bounds to avoid absurd movement.
+	targetY = clamp(targetY, 0, FieldHeight-PaddleHeight)
 
 	diff := targetY - paddleCenter
-	if math.Abs(diff) < 5 {
+	if math.Abs(diff) < 12 {
 		g.Input2 = 0
 	} else if diff > 0 {
 		g.Input2 = 1
 	} else {
 		g.Input2 = -1
+	}
+
+	// Slightly reduce confidence and make it less consistent on long rallies.
+	if time.Now().UnixNano()%23 == 0 {
+		g.Input2 *= 0.6
 	}
 }
 

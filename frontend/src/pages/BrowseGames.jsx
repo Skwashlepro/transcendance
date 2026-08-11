@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../utils/api';
 import GameCard from '../ui/GameCard';
+import { useTranslation } from '../i18n';
 import './BrowseGames.css';
 
 const CATALOG_CACHE_KEY = 'game_catalog_cache_v1';
 
 function BrowseGames() {
+  const { t } = useTranslation();
   const [games, setGames] = useState([]);
   const [genres, setGenres] = useState(['All']);
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,13 +86,13 @@ function BrowseGames() {
 
   return (
     <div className="browse-games">
-      <h1>Browse Games</h1>
+      <h1>{t('nav.games')}</h1>
 
       <div className="filters">
         <div className="search-box">
           <input
             type="text"
-            placeholder="Search games..."
+            placeholder={t('browse.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -110,7 +112,7 @@ function BrowseGames() {
       </div>
 
       {loading ? (
-        <p className="no-results">Loading games...</p>
+        <p className="no-results">{t('browse.loading')}</p>
       ) : error ? (
         <p className="no-results">{error}</p>
       ) : (
@@ -120,7 +122,7 @@ function BrowseGames() {
               <GameCard key={game.id} game={game} />
             ))
           ) : (
-            <p className="no-results">No games found. Try a different search.</p>
+            <p className="no-results">{t('browse.noResults')}</p>
           )}
         </div>
       )}

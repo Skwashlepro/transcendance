@@ -10,6 +10,7 @@ function Profile() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [matches, setMatches] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
   const [bio, setBio] = useState('');
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState('');
@@ -42,6 +43,18 @@ function Profile() {
     };
     loadMatches();
   }, [username]);
+
+  useEffect(() => {
+    const loadLeaderboard = async () => {
+      try {
+        const data = await api.getLeaderboard();
+        setLeaderboard(data.leaderboard || []);
+      } catch (e) {
+        // ignore
+      }
+    };
+    loadLeaderboard();
+  }, []);
 
   const handleSaveBio = async () => {
     try {
@@ -118,6 +131,16 @@ function Profile() {
           <div className="stats">
             <span className="stat"><strong>{profile.wins}</strong> Wins</span>
             <span className="stat"><strong>{profile.losses}</strong> Losses</span>
+            <span className="stat"><strong>Lv {profile.level || 1}</strong> Level</span>
+          </div>
+          <div className="progress-block">
+            <div className="progress-row">
+              <span>XP</span>
+              <strong>{profile.xp || 0}</strong>
+            </div>
+            <div className="progress-bar">
+              <span style={{ width: `${Math.min(100, (((profile.xp || 0) % 250) / 250) * 100)}%` }} />
+            </div>
           </div>
           {isOwnProfile ? (
             editing ? (
@@ -146,6 +169,43 @@ function Profile() {
             </>
           )}
         </div>
+      </div>
+
+      <div className="profile-panels">
+        <section className="profile-panel achievements-panel">
+          <h2>Achievements</h2>
+          {Array.isArray(profile.achievements) && profile.achievements.length > 0 ? (
+            <div className="achievement-grid">
+              {profile.achievements.map((achievement) => (
+                <div key={achievement.key} className="achievement-item">
+                  <div className="achievement-badge">★</div>
+                  <div>
+                    <strong>{achievement.title}</strong>
+                    <p>{achievement.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="empty-state">No achievements unlocked yet</p>
+          )}
+        </section>
+
+        <section className="profile-panel leaderboard-panel">
+          <h2>Leaderboard</h2>
+          {leaderboard.length === 0 ? (
+            <p className="empty-state">No leaderboard data yet</p>
+          ) : (
+            <ol className="leaderboard-list">
+              {leaderboard.map((entry, index) => (
+                <li key={`${entry.username}-${index}`} className={entry.username === username ? 'rank-self' : ''}>
+                  <span>#{index + 1} {entry.username}</span>
+                  <strong>{entry.wins}W · Lv {entry.level}</strong>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
       </div>
 
       <section className="match-history">

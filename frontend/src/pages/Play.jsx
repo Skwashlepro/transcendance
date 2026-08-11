@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { useTranslation } from '../i18n';
 import PongGame from '../components/PongGame';
 import './Play.css';
 
 function Play() {
   const { isAuthenticated, user } = useAuth();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [gameState, setGameState] = useState(null);
   const [gameInfo, setGameInfo] = useState(null);
@@ -80,7 +82,7 @@ function Play() {
         loadDashboard();
         break;
       case 'opponent_disconnected':
-        setError('Opponent disconnected');
+        setError(t('play.opponentDisconnected'));
         setStatus('idle');
         setQueueStartedAt(null);
         setGameState(null);
@@ -90,7 +92,7 @@ function Play() {
       default:
         break;
     }
-  }, [loadDashboard]);
+  }, [loadDashboard, t]);
 
   const { connected, send } = useWebSocket(isAuthenticated ? handleMessage : null);
 
@@ -126,9 +128,9 @@ function Play() {
   return (
     <div className="play-page">
       <div className="play-header">
-        <h1>Pong Arena</h1>
+        <h1>{t('play.title')}</h1>
         <span className={`connection-badge ${connected ? 'online' : 'offline'}`}>
-          {connected ? 'Connected' : 'Reconnecting...'}
+          {connected ? t('play.connected') : t('play.reconnecting')}
         </span>
       </div>
 
@@ -137,10 +139,10 @@ function Play() {
       {status === 'idle' && (
         <div className="play-menu">
           <button className="btn-primary btn-large" onClick={findMatch} disabled={!connected}>
-            Find Online Match
+            {t('play.findOnline')}
           </button>
           <button className="btn-secondary btn-large" onClick={findAIMatch} disabled={!connected}>
-            Play vs AI
+            {t('play.playAi')}
           </button>
         </div>
       )}
@@ -148,9 +150,9 @@ function Play() {
       {status === 'queue' && (
         <div className="queue-status">
           <div className="spinner" />
-          <p>Searching for opponent...</p>
-          <p className="queue-timer">Queue time: {queueSeconds}s</p>
-          <button className="btn-secondary" onClick={cancelQueue}>Cancel</button>
+          <p>{t('play.searching')}</p>
+          <p className="queue-timer">{t('play.queueTime')}: {queueSeconds}s</p>
+          <button className="btn-secondary" onClick={cancelQueue}>{t('play.cancel')}</button>
         </div>
       )}
 
@@ -164,9 +166,9 @@ function Play() {
           <PongGame gameState={gameState} side={gameInfo?.side || 1} onInput={handleInput} />
           {status === 'finished' && (
             <div className="game-actions">
-              <button className="btn-primary" onClick={rematch}>Rematch</button>
+              <button className="btn-primary" onClick={rematch}>{t('play.rematch')}</button>
               <button className="btn-secondary" onClick={() => { setStatus('idle'); setGameState(null); setGameInfo(null); loadDashboard(); }}>
-                Back to Menu
+                {t('play.backToMenu')}
               </button>
             </div>
           )}
@@ -175,27 +177,27 @@ function Play() {
 
       <section className="play-dashboard">
         <div className="stats-card">
-          <h2>Your Pong Record</h2>
+          <h2>{t('play.yourPongRecord')}</h2>
           <div className="stats-grid">
             <div>
-              <span>Wins</span>
+              <span>{t('play.wins')}</span>
               <strong>{stats.wins}</strong>
             </div>
             <div>
-              <span>Losses</span>
+              <span>{t('play.losses')}</span>
               <strong>{stats.losses}</strong>
             </div>
             <div>
-              <span>Win rate</span>
+              <span>{t('play.winRate')}</span>
               <strong>{winRate}%</strong>
             </div>
           </div>
         </div>
 
         <div className="history-card">
-          <h2>Recent Matches</h2>
+          <h2>{t('play.recentMatches')}</h2>
           {history.length === 0 ? (
-            <p className="history-empty">No matches played yet.</p>
+            <p className="history-empty">{t('play.noMatches')}</p>
           ) : (
             <ul className="history-list">
               {history.slice(0, 8).map((match) => {
@@ -209,7 +211,7 @@ function Play() {
                   <li key={match.id}>
                     <div>
                       <strong>{didWin ? 'Win' : 'Loss'}</strong>
-                      <span>vs {opponent || 'AI'}{match.is_ai ? ' (AI)' : ''}</span>
+                      <span>{t('play.vs')} {opponent || 'AI'}{match.is_ai ? ' (AI)' : ''}</span>
                     </div>
                     <div className="history-score">{myScore} - {oppScore}</div>
                     <time>{new Date(match.created_at).toLocaleString()}</time>

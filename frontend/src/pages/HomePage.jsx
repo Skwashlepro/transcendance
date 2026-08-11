@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { api } from '../utils/api';
+import { useTranslation } from '../i18n';
 import './HomePage.css';
 
 function HomePage() {
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const [message, setMessage] = useState('');
   const [apiLatency, setApiLatency] = useState(null);
   const [catalogCount, setCatalogCount] = useState(0);
@@ -96,41 +98,41 @@ function HomePage() {
     <div className="home-page">
       <section className="hero">
         <div className="hero-copy">
-          <p className="eyebrow">Public game library</p>
-          <h1>GameVault</h1>
-          <p>Discover, review, and discuss standout games in a live catalog.</p>
+          <p className="eyebrow">{t('home.publicLibrary')}</p>
+          <h1>{t('app.title')}</h1>
+          <p>{t('app.tagline')}</p>
           <div className="hero-actions">
             <Link to="/games" className="btn btn-primary">
-              Browse Games
+              {t('home.browseGames')}
             </Link>
             <Link to="/play" className="btn btn-secondary">
-              Play Pong
+              {t('home.playPong')}
             </Link>
           </div>
           {message && <p className="api-status">{message}</p>}
         </div>
         <div className="hero-panel">
           <div>
-            <span>System status</span>
-            <strong>{connected ? 'Realtime connected' : 'Realtime offline'}</strong>
-            <small>{apiLatency !== null ? `API latency ${apiLatency} ms` : 'API latency unavailable'}</small>
+            <span>{t('home.systemStatus')}</span>
+            <strong>{connected ? t('home.realtimeConnected') : t('home.realtimeOffline')}</strong>
+            <small>{apiLatency !== null ? `${t('home.apiLatency')} ${apiLatency} ms` : t('home.apiUnavailable')}</small>
           </div>
           <div>
-            <span>Live library</span>
-            <strong>{catalogCount} games loaded</strong>
-            <small>Auto-refreshes every 30 seconds</small>
+            <span>{t('home.liveLibrary')}</span>
+            <strong>{catalogCount} {t('home.gamesLoaded')}</strong>
+            <small>{t('home.autoRefresh')}</small>
           </div>
           <div>
-            <span>Friends & chat</span>
+            <span>{t('home.social')}</span>
             {isAuthenticated ? (
               <>
-                <strong>{onlineCount}/{friends.length} online, {pendingCount} pending</strong>
+                <strong>{onlineCount}/{friends.length} {t('home.onlineOf')}, {pendingCount} {t('home.pending')}</strong>
                 <small>Presence updates in realtime</small>
               </>
             ) : (
               <>
-                <strong>Sign in to unlock social live stats</strong>
-                <small>Friends, chat, and online indicators</small>
+                <strong>{t('home.signInUnlock')}</strong>
+                <small>{t('home.socialInfo')}</small>
               </>
             )}
           </div>
@@ -140,20 +142,20 @@ function HomePage() {
       <section className="features">
         <div className="feature-grid">
           <div className="feature">
-            <h3>🎮 Extensive Catalog</h3>
-            <p>Browse thousands of video games across all platforms and genres.</p>
+            <h3>{t('home.feature1Title')}</h3>
+            <p>{t('home.feature1Text')}</p>
           </div>
           <div className="feature">
-            <h3>⭐ Write Reviews</h3>
-            <p>Share your opinions and rate games with detailed reviews.</p>
+            <h3>{t('home.feature2Title')}</h3>
+            <p>{t('home.feature2Text')}</p>
           </div>
           <div className="feature">
-            <h3>👥 Friends & Chat</h3>
-            <p>Connect with gamers and discuss your favorite titles in real-time.</p>
+            <h3>{t('home.feature3Title')}</h3>
+            <p>{t('home.feature3Text')}</p>
           </div>
           <div className="feature">
-            <h3>📊 Rankings</h3>
-            <p>See what the community thinks about different games.</p>
+            <h3>{t('home.feature4Title')}</h3>
+            <p>{t('home.feature4Text')}</p>
           </div>
         </div>
       </section>

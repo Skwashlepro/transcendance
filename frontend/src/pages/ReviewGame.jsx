@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../i18n';
 import './ReviewGame.css';
 
 const CATALOG_CACHE_KEY = 'game_catalog_cache_v1';
@@ -23,6 +24,7 @@ function ReviewGame() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
+  const { t } = useTranslation();
   const game = useMemo(() => location.state?.game || findCachedGameById(id), [id, location.state]);
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState('');
@@ -80,13 +82,13 @@ function ReviewGame() {
 
   return (
     <div className="review-game">
-      <h1>Write a Review</h1>
-      {game?.title && <p>Reviewing: <strong>{game.title}</strong></p>}
+      <h1>{t('review.title')}</h1>
+      {game?.title && <p>{t('review.reviewing')} <strong>{game.title}</strong></p>}
       {error && <div className="alert alert-error">{error}</div>}
 
       <form onSubmit={handleSubmit} className="review-form">
         <div className="form-group">
-          <label>Rating</label>
+          <label>{t('review.rating')}</label>
           <div className="rating-selector">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -99,15 +101,15 @@ function ReviewGame() {
               </button>
             ))}
           </div>
-          <p className="rating-display">{rating} out of 5</p>
+          <p className="rating-display">{rating} {t('review.outOfFive')}</p>
         </div>
 
         <div className="form-group">
-          <label htmlFor="title">Review Title</label>
+          <label htmlFor="title">{t('review.reviewTitle')}</label>
           <input
             id="title"
             type="text"
-            placeholder="Give your review a title..."
+            placeholder={t('review.reviewTitlePlaceholder')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             required
@@ -115,10 +117,10 @@ function ReviewGame() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="content">Your Review</label>
+          <label htmlFor="content">{t('review.yourReview')}</label>
           <textarea
             id="content"
-            placeholder="Share your thoughts about the game..."
+            placeholder={t('review.reviewPlaceholder')}
             rows={10}
             value={content}
             onChange={(e) => setContent(e.target.value)}
@@ -128,7 +130,7 @@ function ReviewGame() {
 
         <div className="form-actions">
               <button type="submit" className="btn btn-primary" disabled={submitting}>
-                {submitting ? 'Posting...' : 'Post Review'}
+                {submitting ? t('review.posting') : t('review.post')}
           </button>
           <button
             type="button"
@@ -136,13 +138,13 @@ function ReviewGame() {
             onClick={() => navigate(`/game/${id}`)}
                 disabled={submitting}
           >
-            Cancel
+            {t('review.cancel')}
           </button>
         </div>
       </form>
 
           <p className="auth-link">
-            Want to switch account? <Link to="/signin" state={{ from: `/game/${id}/review`, game }}>Sign in</Link>
+            {t('review.switchAccount')} <Link to="/signin" state={{ from: `/game/${id}/review`, game }}>{t('auth.signIn')}</Link>
           </p>
     </div>
   );

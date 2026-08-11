@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from '../i18n';
 import './Signin.css';
 
 function Signin() {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
+  const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -29,11 +31,11 @@ function Signin() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <h2>Sign In</h2>
+        <h2>{t('auth.signIn')}</h2>
         {error && <div className="alert alert-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="username">Username or Email</label>
+            <label htmlFor="username">{t('auth.usernameOrEmail')}</label>
             <input
               type="text"
               id="username"
@@ -44,7 +46,7 @@ function Signin() {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">{t('auth.password')}</label>
             <input
               type="password"
               id="password"
@@ -55,11 +57,11 @@ function Signin() {
             />
           </div>
           <button type="submit" className="btn-primary btn-full" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? t('auth.signingIn') : t('auth.signIn')}
           </button>
         </form>
         <p className="auth-link">
-          Don't have an account? <Link to="/signup">Sign Up</Link>
+          {t('auth.noAccount')} <Link to="/signup">{t('auth.signUp')}</Link>
         </p>
       </div>
     </div>

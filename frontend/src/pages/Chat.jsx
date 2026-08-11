@@ -3,10 +3,12 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../utils/api';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { useTranslation } from '../i18n';
 import './Chat.css';
 
 function Chat() {
   const { username } = useParams();
+  const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
   const [messages, setMessages] = useState([]);
   const [conversations, setConversations] = useState([]);
@@ -104,7 +106,7 @@ function Chat() {
   if (!isAuthenticated) {
     return (
       <div className="chat-page">
-        <p>Please <Link to="/signin">sign in</Link> to use chat.</p>
+        <p>{t('misc.signInPrompt')} <Link to="/signin">{t('auth.signIn')}</Link> {t('misc.toUseChat')}</p>
       </div>
     );
   }
@@ -112,9 +114,9 @@ function Chat() {
   return (
     <div className="chat-page">
       <aside className="chat-sidebar">
-        <h2>Messages</h2>
+        <h2>{t('chat.messages')}</h2>
         {conversations.length === 0 ? (
-          <p className="empty-state">No conversations yet</p>
+          <p className="empty-state">{t('chat.noConversations')}</p>
         ) : (
           <ul className="conversation-list">
             {conversations.map((c) => (
@@ -135,14 +137,14 @@ function Chat() {
             <div className="chat-header">
               <Link to={`/profile/${username}`}>{username}</Link>
               <span className={`socket-status ${connected ? 'online' : 'offline'}`}>
-                {connected ? 'Live' : 'Offline mode'}
+                {connected ? t('chat.live') : t('chat.offlineMode')}
               </span>
             </div>
             {error && <div className="alert alert-error">{error}</div>}
             <div className="chat-messages">
               {messages.map((m) => (
                 <div key={m.id} className={`message ${m.is_mine ? 'mine' : 'theirs'}`}>
-                  <span className="msg-author">{m.is_mine ? 'You' : m.username}</span>
+                  <span className="msg-author">{m.is_mine ? t('chat.you') : m.username}</span>
                   <span className="msg-content">{m.content}</span>
                 </div>
               ))}
@@ -151,18 +153,18 @@ function Chat() {
             <form className="chat-input" onSubmit={handleSend}>
               <input
                 type="text"
-                placeholder="Type a message..."
+                placeholder={t('chat.typeMessage')}
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 maxLength={2000}
               />
-              <button type="submit" className="btn-primary">Send</button>
+              <button type="submit" className="btn-primary">{t('chat.send')}</button>
             </form>
           </>
         ) : (
           <div className="chat-placeholder">
-            <p>Select a conversation or start chatting with a friend</p>
-            <Link to="/friends" className="btn-primary">Go to Friends</Link>
+            <p>{t('chat.placeholder')}</p>
+            <Link to="/friends" className="btn-primary">{t('chat.goToFriends')}</Link>
           </div>
         )}
       </main>
