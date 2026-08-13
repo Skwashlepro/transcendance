@@ -99,6 +99,9 @@ export const api = {
   acceptFriend: (id) => request(`/api/friends/accept/${id}`, { method: 'POST' }),
   removeFriend: (username) =>
     request(`/api/friends/${username}`, { method: 'DELETE' }),
+  getBlocked: () => request('/api/friends/blocked'),
+  blockUser: (username) => request(`/api/friends/block/${username}`, { method: 'POST' }),
+  unblockUser: (username) => request(`/api/friends/block/${username}`, { method: 'DELETE' }),
 
   getConversations: () => request('/api/chat/conversations'),
   getChatHistory: (username) => request(`/api/chat/${username}`),

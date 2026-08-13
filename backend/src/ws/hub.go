@@ -38,9 +38,18 @@ type Hub struct {
 	db           *sql.DB
 	games        map[string]*game.PongGame
 	matchQueue   []int // user IDs waiting for match
+	invites      map[string]*GameInvite
 	broadcast    chan BroadcastMsg
 	register     chan *Client
 	unregister   chan *Client
+}
+
+type GameInvite struct {
+	ID        string
+	FromID    int
+	FromUser  string
+	ToID      int
+	CreatedAt time.Time
 }
 
 type BroadcastMsg struct {
@@ -59,6 +68,8 @@ type WSMessage struct {
 	TargetUser string `json:"target_user,omitempty"`
 	Direction float64 `json:"direction,omitempty"`
 	GameID    string  `json:"game_id,omitempty"`
+	InviteID  string  `json:"invite_id,omitempty"`
+	MessageID int     `json:"message_id,omitempty"`
 }
 
 func NewHub(db *sql.DB) *Hub {
@@ -68,6 +79,7 @@ func NewHub(db *sql.DB) *Hub {
 		db:          db,
 		games:       make(map[string]*game.PongGame),
 		matchQueue:  []int{},
+		invites:     make(map[string]*GameInvite),
 		broadcast:   make(chan BroadcastMsg, 256),
 		register:    make(chan *Client),
 		unregister:  make(chan *Client),
@@ -88,6 +100,7 @@ func (h *Hub) Run() {
 			h.onlineUsers[client.UserID] = true
 			h.mu.Unlock()
 			h.notifyOnlineStatus(client.UserID, true)
+			h.resumeGameIfPaused(client)
 			h.replayCurrentGameState(client)
 			_, _ = h.db.Exec(`UPDATE users SET last_seen = NOW() WHERE id = $1`, client.UserID)
 
@@ -118,6 +131,12 @@ func (h *Hub) OnlineUsers() map[int]bool {
 		copy[k] = v
 	}
 	return copy
+}
+
+// NotifyUser lets other packages (e.g. REST handlers) push a realtime event
+// to a specific connected user without depending on internal hub types.
+func (h *Hub) NotifyUser(userID int, msgType string, data interface{}) {
+	h.sendToUser(userID, BroadcastMsg{Type: msgType, Data: data})
 }
 
 func (h *Hub) notifyOnlineStatus(userID int, online bool) {
@@ -285,6 +304,16 @@ func (c *Client) handleMessage(msg WSMessage) {
 	switch msg.Type {
 	case "chat":
 		c.handleChat(msg)
+	case "typing":
+		c.handleTyping(msg)
+	case "mark_read":
+		c.handleMarkRead(msg)
+	case "game_invite":
+		c.handleGameInvite(msg)
+	case "accept_game_invite":
+		c.Hub.acceptGameInvite(c.UserID, msg.InviteID)
+	case "decline_game_invite":
+		c.Hub.declineGameInvite(c.UserID, msg.InviteID)
 	case "game_input":
 		c.handleGameInput(msg)
 	case "find_match":
@@ -293,9 +322,137 @@ func (c *Client) handleMessage(msg WSMessage) {
 		c.Hub.findMatch(c.UserID, true)
 	case "rematch":
 		c.Hub.handleRematch(c.UserID, msg.GameID)
+	case "leave_game":
+		c.Hub.leaveGame(c.UserID, msg.GameID)
 	case "cancel_queue":
 		c.Hub.removeFromQueue(c.UserID)
 	}
+}
+
+func (c *Client) resolveTargetID(msg WSMessage) (int, bool) {
+	if msg.TargetID > 0 {
+		return msg.TargetID, true
+	}
+	if msg.TargetUser != "" {
+		var targetID int
+		if err := c.Hub.db.QueryRow(`SELECT id FROM users WHERE username = $1`, msg.TargetUser).Scan(&targetID); err == nil {
+			return targetID, true
+		}
+	}
+	return 0, false
+}
+
+func (c *Client) handleTyping(msg WSMessage) {
+	targetID, ok := c.resolveTargetID(msg)
+	if !ok {
+		return
+	}
+	c.Hub.sendToUser(targetID, BroadcastMsg{
+		Type:     "typing",
+		UserID:   c.UserID,
+		Username: c.Username,
+		TargetID: targetID,
+	})
+}
+
+func (c *Client) handleMarkRead(msg WSMessage) {
+	targetID, ok := c.resolveTargetID(msg)
+	if !ok {
+		return
+	}
+	_, err := c.Hub.db.Exec(`UPDATE messages SET read_at = NOW() WHERE sender_id = $1 AND receiver_id = $2 AND read_at IS NULL`, targetID, c.UserID)
+	if err != nil {
+		return
+	}
+	c.Hub.sendToUser(targetID, BroadcastMsg{
+		Type:     "read_receipt",
+		UserID:   c.UserID,
+		TargetID: targetID,
+	})
+}
+
+func (c *Client) handleGameInvite(msg WSMessage) {
+	targetID, ok := c.resolveTargetID(msg)
+	if !ok || targetID == c.UserID {
+		return
+	}
+	if handlers.IsBlocked(c.Hub.db, c.UserID, targetID) {
+		return
+	}
+
+	inviteID := generateGameID()
+	c.Hub.mu.Lock()
+	c.Hub.invites[inviteID] = &GameInvite{
+		ID:        inviteID,
+		FromID:    c.UserID,
+		FromUser:  c.Username,
+		ToID:      targetID,
+		CreatedAt: time.Now(),
+	}
+	c.Hub.mu.Unlock()
+
+	c.Hub.sendToUser(targetID, BroadcastMsg{
+		Type:     "game_invite",
+		UserID:   c.UserID,
+		Username: c.Username,
+		TargetID: targetID,
+		Data:     map[string]interface{}{"invite_id": inviteID},
+	})
+}
+
+func (h *Hub) acceptGameInvite(userID int, inviteID string) {
+	h.mu.Lock()
+	invite, ok := h.invites[inviteID]
+	if !ok || invite.ToID != userID {
+		h.mu.Unlock()
+		return
+	}
+	delete(h.invites, inviteID)
+	h.removeFromQueueLocked(invite.FromID)
+	h.removeFromQueueLocked(userID)
+
+	gameID := generateGameID()
+	g := game.NewPongGame(gameID, invite.FromID, userID, false)
+	g.OnFinish = func(pg *game.PongGame) { h.onGameFinish(pg) }
+	h.games[gameID] = g
+	g.Start()
+
+	h.sendToUserLocked(invite.FromID, BroadcastMsg{
+		Type: "game_start",
+		Data: map[string]interface{}{
+			"game_id":  gameID,
+			"side":     1,
+			"is_ai":    false,
+			"opponent": h.getUsername(userID),
+		},
+	})
+	h.sendToUserLocked(userID, BroadcastMsg{
+		Type: "game_start",
+		Data: map[string]interface{}{
+			"game_id":  gameID,
+			"side":     2,
+			"is_ai":    false,
+			"opponent": invite.FromUser,
+		},
+	})
+	h.mu.Unlock()
+	go h.broadcastGameState(gameID)
+}
+
+func (h *Hub) declineGameInvite(userID int, inviteID string) {
+	h.mu.Lock()
+	invite, ok := h.invites[inviteID]
+	if !ok || invite.ToID != userID {
+		h.mu.Unlock()
+		return
+	}
+	delete(h.invites, inviteID)
+	h.mu.Unlock()
+
+	h.sendToUser(invite.FromID, BroadcastMsg{
+		Type: "game_invite_declined",
+		Data: map[string]interface{}{"invite_id": inviteID},
+	})
 }
 
 func (c *Client) handleChat(msg WSMessage) {
@@ -312,6 +469,10 @@ func (c *Client) handleChat(msg WSMessage) {
 			return
 		}
 	} else {
+		return
+	}
+
+	if handlers.IsBlocked(c.Hub.db, c.UserID, receiverID) {
 		return
 	}
 
@@ -471,6 +632,11 @@ func (h *Hub) replayCurrentGameState(client *Client) {
 		if g.Player1ID != client.UserID && g.Player2ID != client.UserID {
 			continue
 		}
+		if g.State.Status == "finished" {
+			// Nothing to resume; the player still has the option to rematch
+			// from the last game_over message they already received.
+			continue
+		}
 		side := 1
 		if g.Player2ID == client.UserID {
 			side = 2
@@ -528,9 +694,16 @@ func (h *Hub) onGameFinish(g *game.PongGame) {
 		h.sendToUser(g.Player2ID, finishMsg)
 	}
 
-	h.mu.Lock()
-	delete(h.games, g.ID)
-	h.mu.Unlock()
+	// Keep the finished game around briefly so a Rematch request can still find
+	// it; expire it automatically if neither player rematches or leaves.
+	gameID := g.ID
+	time.AfterFunc(2*time.Minute, func() {
+		h.mu.Lock()
+		defer h.mu.Unlock()
+		if stale, ok := h.games[gameID]; ok && stale == g {
+			delete(h.games, gameID)
+		}
+	})
 }
 
 func (h *Hub) handleRematch(userID int, gameID string) {
@@ -550,29 +723,114 @@ func (h *Hub) handleRematch(userID int, gameID string) {
 	go h.broadcastGameState(gameID)
 }
 
-func (h *Hub) handleDisconnect(userID int) {
+func (h *Hub) leaveGame(userID int, gameID string) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
+	g, ok := h.games[gameID]
+	if !ok {
+		return
+	}
+	if g.Player1ID != userID && g.Player2ID != userID {
+		return
+	}
+	// Only clean up games that have already finished; an in-progress match
+	// should keep running for the remaining player.
+	if g.State.Status == "finished" {
+		delete(h.games, gameID)
+	}
+}
+
+const reconnectGraceSeconds = 20
+
+func (h *Hub) handleDisconnect(userID int) {
+	h.mu.Lock()
 	h.removeFromQueueLocked(userID)
 
 	for id, g := range h.games {
-		if g.Player1ID == userID || g.Player2ID == userID {
-			g.Stop()
-			opponentID := g.Player2ID
-			if userID == g.Player2ID {
-				opponentID = g.Player1ID
-			}
-			if opponentID > 0 {
-				h.sendToUserLocked(opponentID, BroadcastMsg{
-					Type: "opponent_disconnected",
-					Data: map[string]interface{}{"game_id": id},
-				})
-			}
-			delete(h.games, id)
+		if g.Player1ID != userID && g.Player2ID != userID {
+			continue
 		}
+
+		if g.State.Status == "finished" {
+			// Match already ended; nothing to reconnect to.
+			continue
+		}
+
+		if g.IsAI {
+			// No remote opponent to reconnect with, so end the match immediately.
+			g.Stop()
+			delete(h.games, id)
+			h.mu.Unlock()
+			return
+		}
+
+		opponentID := g.Player2ID
+		if userID == g.Player2ID {
+			opponentID = g.Player1ID
+		}
+
+		g.Pause()
+		gameID := id
+		h.sendToUserLocked(opponentID, BroadcastMsg{
+			Type: "opponent_reconnecting",
+			Data: map[string]interface{}{"game_id": gameID, "grace_seconds": reconnectGraceSeconds},
+		})
+		h.mu.Unlock()
+
+		time.AfterFunc(reconnectGraceSeconds*time.Second, func() {
+			h.finalizeDisconnectIfStillGone(gameID, userID, opponentID)
+		})
+		return
+	}
+	h.mu.Unlock()
+}
+
+// finalizeDisconnectIfStillGone ends the match if the disconnected player never
+// rejoined within the reconnection grace period.
+func (h *Hub) finalizeDisconnectIfStillGone(gameID string, userID, opponentID int) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	g, ok := h.games[gameID]
+	if !ok {
+		return
+	}
+	if _, stillOnline := h.clients[userID]; stillOnline {
+		return
+	}
+
+	g.Stop()
+	delete(h.games, gameID)
+	h.sendToUserLocked(opponentID, BroadcastMsg{
+		Type: "opponent_disconnected",
+		Data: map[string]interface{}{"game_id": gameID},
+	})
+}
+
+func (h *Hub) resumeGameIfPaused(client *Client) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	for id, g := range h.games {
+		if g.Player1ID != client.UserID && g.Player2ID != client.UserID {
+			continue
+		}
+		if !g.IsPaused() {
+			continue
+		}
+		g.Resume()
+		opponentID := g.Player1ID
+		if client.UserID == g.Player1ID {
+			opponentID = g.Player2ID
+		}
+		h.sendToUserLocked(opponentID, BroadcastMsg{
+			Type: "opponent_reconnected",
+			Data: map[string]interface{}{"game_id": id},
+		})
 	}
 }
+
 
 func (h *Hub) removeFromQueueLocked(userID int) {
 	for i, id := range h.matchQueue {

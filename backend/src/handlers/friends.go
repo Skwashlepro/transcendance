@@ -12,6 +12,12 @@ type FriendRequest struct {
 	Username string `json:"username" binding:"required"`
 }
 
+// Notifier lets handlers push a realtime event to a specific user without
+// importing the websocket package (which already depends on handlers).
+type Notifier interface {
+	NotifyUser(userID int, msgType string, data interface{})
+}
+
 func ListFriendsHandler(db *sql.DB, onlineUsers map[int]bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, ok := auth.GetUserID(c)
@@ -91,7 +97,7 @@ func ListPendingHandler(db *sql.DB) gin.HandlerFunc {
 	}
 }
 
-func AddFriendHandler(db *sql.DB) gin.HandlerFunc {
+func AddFriendHandler(db *sql.DB, notifier Notifier) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, ok := auth.GetUserID(c)
 		if !ok {
@@ -121,20 +127,29 @@ func AddFriendHandler(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		_, err = db.Exec(
-			`INSERT INTO friendships (user_id, friend_id, status) VALUES ($1, $2, 'pending')`,
+		var requestID int
+		err = db.QueryRow(
+			`INSERT INTO friendships (user_id, friend_id, status) VALUES ($1, $2, 'pending') RETURNING id`,
 			userID, friendID,
-		)
+		).Scan(&requestID)
 		if err != nil {
 			c.JSON(http.StatusConflict, gin.H{"error": "friend request already exists"})
 			return
+		}
+
+		if notifier != nil {
+			username, _ := c.Get("username")
+			notifier.NotifyUser(friendID, "friend_request", map[string]interface{}{
+				"request_id": requestID,
+				"username":   username,
+			})
 		}
 
 		c.JSON(http.StatusCreated, gin.H{"message": "friend request sent"})
 	}
 }
 
-func AcceptFriendHandler(db *sql.DB) gin.HandlerFunc {
+func AcceptFriendHandler(db *sql.DB, notifier Notifier) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, ok := auth.GetUserID(c)
 		if !ok {
@@ -143,6 +158,10 @@ func AcceptFriendHandler(db *sql.DB) gin.HandlerFunc {
 		}
 
 		requestID := c.Param("id")
+
+		var requesterID int
+		_ = db.QueryRow(`SELECT user_id FROM friendships WHERE id = $1 AND friend_id = $2`, requestID, userID).Scan(&requesterID)
+
 		result, err := db.Exec(
 			`UPDATE friendships SET status = 'accepted' WHERE id = $1 AND friend_id = $2 AND status = 'pending'`,
 			requestID, userID,
@@ -156,6 +175,13 @@ func AcceptFriendHandler(db *sql.DB) gin.HandlerFunc {
 		if rows == 0 {
 			c.JSON(http.StatusNotFound, gin.H{"error": "request not found"})
 			return
+		}
+
+		if notifier != nil && requesterID > 0 {
+			username, _ := c.Get("username")
+			notifier.NotifyUser(requesterID, "friend_accepted", map[string]interface{}{
+				"username": username,
+			})
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "friend request accepted"})
@@ -188,5 +214,110 @@ func RemoveFriendHandler(db *sql.DB) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "friend removed"})
+	}
+}
+
+// IsBlocked reports whether either user has blocked the other.
+func IsBlocked(db *sql.DB, userID, otherID int) bool {
+	var exists bool
+	_ = db.QueryRow(
+		`SELECT EXISTS(
+			SELECT 1 FROM blocked_users
+			WHERE (user_id = $1 AND blocked_id = $2) OR (user_id = $2 AND blocked_id = $1)
+		)`,
+		userID, otherID,
+	).Scan(&exists)
+	return exists
+}
+
+func BlockUserHandler(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, ok := auth.GetUserID(c)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+			return
+		}
+
+		targetUsername := c.Param("username")
+		var targetID int
+		err := db.QueryRow(`SELECT id FROM users WHERE username = $1`, targetUsername).Scan(&targetID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+
+		if targetID == userID {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "cannot block yourself"})
+			return
+		}
+
+		_, err = db.Exec(
+			`INSERT INTO blocked_users (user_id, blocked_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+			userID, targetID,
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "could not block user"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "user blocked"})
+	}
+}
+
+func UnblockUserHandler(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, ok := auth.GetUserID(c)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+			return
+		}
+
+		targetUsername := c.Param("username")
+		var targetID int
+		err := db.QueryRow(`SELECT id FROM users WHERE username = $1`, targetUsername).Scan(&targetID)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+
+		_, err = db.Exec(`DELETE FROM blocked_users WHERE user_id = $1 AND blocked_id = $2`, userID, targetID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "could not unblock user"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "user unblocked"})
+	}
+}
+
+func ListBlockedHandler(db *sql.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, ok := auth.GetUserID(c)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+			return
+		}
+
+		rows, err := db.Query(`
+			SELECT u.username FROM blocked_users b
+			JOIN users u ON u.id = b.blocked_id
+			WHERE b.user_id = $1
+		`, userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "could not fetch blocked users"})
+			return
+		}
+		defer rows.Close()
+
+		blocked := []string{}
+		for rows.Next() {
+			var username string
+			if err := rows.Scan(&username); err != nil {
+				continue
+			}
+			blocked = append(blocked, username)
+		}
+
+		c.JSON(http.StatusOK, gin.H{"blocked": blocked})
 	}
 }

@@ -38,8 +38,18 @@ CREATE TABLE IF NOT EXISTS messages (
     sender_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     receiver_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     content     TEXT NOT NULL,
+    read_at     TIMESTAMPTZ,
     created_at  TIMESTAMPTZ DEFAULT NOW(),
     CHECK (char_length(content) <= 2000)
+);
+
+CREATE TABLE IF NOT EXISTS blocked_users (
+    id          SERIAL PRIMARY KEY,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    blocked_id  INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at  TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(user_id, blocked_id),
+    CHECK (user_id != blocked_id)
 );
 
 CREATE TABLE IF NOT EXISTS matches (
@@ -81,6 +91,7 @@ CREATE INDEX IF NOT EXISTS idx_friendships_user ON friendships(user_id);
 CREATE INDEX IF NOT EXISTS idx_friendships_friend ON friendships(friend_id);
 CREATE INDEX IF NOT EXISTS idx_messages_pair ON messages(sender_id, receiver_id);
 CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(created_at);
+CREATE INDEX IF NOT EXISTS idx_blocked_users_user ON blocked_users(user_id);
 CREATE INDEX IF NOT EXISTS idx_matches_players ON matches(player1_id, player2_id);
 CREATE INDEX IF NOT EXISTS idx_user_achievements_user ON user_achievements(user_id);
 CREATE INDEX IF NOT EXISTS idx_games_genre ON games(genre);

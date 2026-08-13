@@ -89,6 +89,40 @@
   font-weight: 600;
 }
 
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chat-invite-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.chat-invite-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.typing-indicator {
+  font-size: 0.8rem;
+  color: #888;
+  font-style: italic;
+  padding: 0 0.25rem;
+}
+
+.msg-status {
+  display: block;
+  font-size: 0.65rem;
+  color: #9ca3af;
+  margin-top: 0.2rem;
+  text-align: right;
+}
+
 .chat-messages {
   flex: 1;
   overflow-y: auto;

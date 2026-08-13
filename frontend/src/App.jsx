@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AuthProvider } from './context/AuthContext';
+import { WebSocketProvider } from './context/WebSocketContext';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navigation from './ui/Navigation';
 import { I18nProvider, useTranslation } from './i18n';
@@ -16,6 +17,8 @@ import Friends from './friends/Friends';
 import Profile from './pages/Profile';
 import Signin from './pages/Signin';
 import Signup from './pages/signup';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
 
 const CONSENT_KEY = 'ft_transcendence_legal_consent';
 
@@ -127,9 +130,21 @@ function AppShell() {
           <Route path="/profile/:username" element={<Profile />} />
           <Route path="/signin" element={<Signin />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
           <Route path="*" element={<h1>{t('misc.notFound')}</h1>} />
         </Routes>
       </main>
+
+      <footer className="page-footer">
+        <div className="page-footer-inner">
+          <span>© 2026 ft_transcendence</span>
+          <div className="footer-links">
+            <a href="/privacy-policy">{t('misc.privacy')}</a>
+            <a href="/terms">{t('misc.terms')}</a>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
@@ -138,9 +153,11 @@ function App() {
   return (
     <I18nProvider>
       <AuthProvider>
-        <Router>
-          <AppShell />
-        </Router>
+        <WebSocketProvider>
+          <Router>
+            <AppShell />
+          </Router>
+        </WebSocketProvider>
       </AuthProvider>
     </I18nProvider>
   );

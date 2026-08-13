@@ -52,6 +52,7 @@ type PongGame struct {
 	Input1      float64 // -1 up, 0 none, 1 down
 	Input2      float64
 	Running     bool
+	Paused      bool
 	StopCh      chan struct{}
 	OnFinish    func(game *PongGame)
 	AIReaction  float64 // seconds delay
@@ -95,6 +96,26 @@ func (g *PongGame) Stop() {
 	}
 }
 
+// Pause freezes physics updates without stopping the game loop, so a
+// disconnected remote player can rejoin the same match in progress.
+func (g *PongGame) Pause() {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	g.Paused = true
+}
+
+func (g *PongGame) Resume() {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	g.Paused = false
+}
+
+func (g *PongGame) IsPaused() bool {
+	g.mu.RLock()
+	defer g.mu.RUnlock()
+	return g.Paused
+}
+
 func (g *PongGame) SetInput(playerID int, direction float64) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
@@ -124,6 +145,11 @@ func (g *PongGame) loop() {
 			return
 		case <-ticker.C:
 			g.mu.Lock()
+
+			if g.Paused {
+				g.mu.Unlock()
+				continue
+			}
 
 			if g.State.Status == "countdown" {
 				if time.Since(countdownTimer) >= time.Second {
@@ -192,6 +218,9 @@ func (g *PongGame) loop() {
 				} else {
 					g.State.Winner = 2
 				}
+				// The loop goroutine is exiting, so mark the game not-running
+				// or a later Rematch() call would think it's still active and skip restarting it.
+				g.Running = false
 				g.mu.Unlock()
 				if g.OnFinish != nil {
 					g.OnFinish(g)

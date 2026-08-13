@@ -19,6 +19,7 @@ function Play() {
   const [queueSeconds, setQueueSeconds] = useState(0);
   const [stats, setStats] = useState({ wins: 0, losses: 0 });
   const [history, setHistory] = useState([]);
+  const [reconnectNotice, setReconnectNotice] = useState('');
 
   const winRate = useMemo(() => {
     const total = stats.wins + stats.losses;
@@ -71,6 +72,7 @@ function Play() {
         setStatus('playing');
         setQueueStartedAt(null);
         setError('');
+        setReconnectNotice('');
         break;
       case 'game_state':
         setGameState(msg.data);
@@ -81,8 +83,15 @@ function Play() {
         setQueueStartedAt(null);
         loadDashboard();
         break;
+      case 'opponent_reconnecting':
+        setReconnectNotice(t('play.opponentReconnecting').replace('{seconds}', msg.data?.grace_seconds || 20));
+        break;
+      case 'opponent_reconnected':
+        setReconnectNotice('');
+        break;
       case 'opponent_disconnected':
         setError(t('play.opponentDisconnected'));
+        setReconnectNotice('');
         setStatus('idle');
         setQueueStartedAt(null);
         setGameState(null);
@@ -135,6 +144,7 @@ function Play() {
       </div>
 
       {error && <div className="error-banner">{error}</div>}
+      {reconnectNotice && <div className="error-banner reconnect-banner">{reconnectNotice}</div>}
 
       {status === 'idle' && (
         <div className="play-menu">
@@ -167,7 +177,7 @@ function Play() {
           {status === 'finished' && (
             <div className="game-actions">
               <button className="btn-primary" onClick={rematch}>{t('play.rematch')}</button>
-              <button className="btn-secondary" onClick={() => { setStatus('idle'); setGameState(null); setGameInfo(null); loadDashboard(); }}>
+              <button className="btn-secondary" onClick={() => { send({ type: 'leave_game', game_id: gameInfo?.game_id }); setStatus('idle'); setGameState(null); setGameInfo(null); loadDashboard(); }}>
                 {t('play.backToMenu')}
               </button>
             </div>

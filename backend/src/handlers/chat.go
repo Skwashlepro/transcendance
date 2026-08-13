@@ -37,7 +37,7 @@ func GetChatHistoryHandler(db *sql.DB) gin.HandlerFunc {
 		}
 
 		rows, err := db.Query(`
-			SELECT m.id, m.sender_id, u.username, m.content, m.created_at
+			SELECT m.id, m.sender_id, u.username, m.content, m.created_at, m.read_at
 			FROM messages m
 			JOIN users u ON u.id = m.sender_id
 			WHERE (m.sender_id = $1 AND m.receiver_id = $2) OR (m.sender_id = $2 AND m.receiver_id = $1)
@@ -55,7 +55,8 @@ func GetChatHistoryHandler(db *sql.DB) gin.HandlerFunc {
 			var id, senderID int
 			var username, content string
 			var createdAt sql.NullTime
-			if err := rows.Scan(&id, &senderID, &username, &content, &createdAt); err != nil {
+			var readAt sql.NullTime
+			if err := rows.Scan(&id, &senderID, &username, &content, &createdAt, &readAt); err != nil {
 				continue
 			}
 			messages = append(messages, gin.H{
@@ -65,6 +66,7 @@ func GetChatHistoryHandler(db *sql.DB) gin.HandlerFunc {
 				"content":    content,
 				"created_at": createdAt.Time,
 				"is_mine":    senderID == userID,
+				"read":       readAt.Valid,
 			})
 		}
 
@@ -72,6 +74,9 @@ func GetChatHistoryHandler(db *sql.DB) gin.HandlerFunc {
 		for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
 			messages[i], messages[j] = messages[j], messages[i]
 		}
+
+		// Mark incoming messages from the other user as read now that this user opened the conversation.
+		_, _ = db.Exec(`UPDATE messages SET read_at = NOW() WHERE sender_id = $1 AND receiver_id = $2 AND read_at IS NULL`, otherID, userID)
 
 		c.JSON(http.StatusOK, gin.H{"messages": messages})
 	}
@@ -90,6 +95,11 @@ func SendMessageHandler(db *sql.DB) gin.HandlerFunc {
 		err := db.QueryRow(`SELECT id FROM users WHERE username = $1`, otherUsername).Scan(&otherID)
 		if err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+			return
+		}
+
+		if IsBlocked(db, userID, otherID) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "messaging is blocked between these users"})
 			return
 		}
 

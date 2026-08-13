@@ -110,7 +110,8 @@ func GetLeaderboardHandler(db *sql.DB) gin.HandlerFunc {
 		rows, err := db.Query(`
 			SELECT username, wins, losses, xp, level
 			FROM users
-			ORDER BY wins DESC, xp DESC, level DESC
+			WHERE wins > 0 OR losses > 0
+			ORDER BY wins DESC, xp DESC, level DESC, username ASC
 			LIMIT 10
 		`, )
 		if err != nil {

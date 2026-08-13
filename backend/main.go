@@ -102,9 +102,12 @@ func main() {
 				handlers.ListFriendsHandler(db, hub.OnlineUsers())(c)
 			})
 			friends.GET("/pending", handlers.ListPendingHandler(db))
-			friends.POST("", handlers.AddFriendHandler(db))
-			friends.POST("/accept/:id", handlers.AcceptFriendHandler(db))
+			friends.POST("", handlers.AddFriendHandler(db, hub))
+			friends.POST("/accept/:id", handlers.AcceptFriendHandler(db, hub))
 			friends.DELETE("/:username", handlers.RemoveFriendHandler(db))
+			friends.GET("/blocked", handlers.ListBlockedHandler(db))
+			friends.POST("/block/:username", handlers.BlockUserHandler(db))
+			friends.DELETE("/block/:username", handlers.UnblockUserHandler(db))
 		}
 
 		chat := api.Group("/chat", auth.AuthMiddleware())

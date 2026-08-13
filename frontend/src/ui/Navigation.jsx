@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation, getAvailableLanguages } from '../i18n';
+import NotificationCenter from './NotificationCenter';
 import './Navigation.css';
 
 function Navigation() {
@@ -51,6 +52,7 @@ function Navigation() {
 							</NavLink>
 						</>
 					)}
+					<NotificationCenter />
 					<label className="language-picker" aria-label={t('aria.languageSelector')}>
 						<span>{t('nav.language')}</span>
 						<select value={locale} onChange={(e) => setLocale(e.target.value)} aria-label={t('nav.language')}>

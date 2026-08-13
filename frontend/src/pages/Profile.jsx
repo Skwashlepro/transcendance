@@ -7,7 +7,7 @@ import './Profile.css';
 
 function Profile() {
   const { username } = useParams();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
@@ -22,6 +22,7 @@ function Profile() {
   const isOwnProfile = isAuthenticated && user?.username === username;
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     const load = async () => {
       try {
         const data = await api.getProfile(username);
@@ -32,9 +33,10 @@ function Profile() {
       }
     };
     load();
-  }, [username]);
+  }, [username, isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     const loadMatches = async () => {
       try {
         const data = await api.getMatchHistory(username);
@@ -44,9 +46,10 @@ function Profile() {
       }
     };
     loadMatches();
-  }, [username]);
+  }, [username, isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) return undefined;
     const loadLeaderboard = async () => {
       try {
         const data = await api.getLeaderboard();
@@ -56,7 +59,9 @@ function Profile() {
       }
     };
     loadLeaderboard();
-  }, []);
+    const timer = setInterval(loadLeaderboard, 15000);
+    return () => clearInterval(timer);
+  }, [isAuthenticated]);
 
   const handleSaveBio = async () => {
     try {
@@ -83,6 +88,18 @@ function Profile() {
     }
   };
 
+  if (authLoading) {
+    return <div className="profile-page"><div className="spinner" /></div>;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="profile-page">
+        <p>{t('misc.signInPrompt')} <Link to="/signin">{t('auth.signIn')}</Link> {t('misc.toViewProfile')}</p>
+      </div>
+    );
+  }
+
   if (error && !profile) {
     return <div className="profile-page"><p className="error">{error}</p></div>;
   }
@@ -97,10 +114,7 @@ function Profile() {
 
   const fallbackAvatar = '/uploads/avatars/default-placeholder.svg';
 
-  const visibleLeaderboard = (leaderboard || []).filter((entry) => {
-    const placeholderNames = new Set(['dsa', 'asd', 'root', 'guest', 'player', 'placeholder', 'test', 'admin']);
-    return entry && entry.username && !placeholderNames.has(String(entry.username).trim().toLowerCase());
-  });
+  const visibleLeaderboard = leaderboard || [];
 
   return (
     <div className="profile-page">
