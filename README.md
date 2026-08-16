@@ -61,7 +61,7 @@ Key data structures:
 - Dockerized deployment
 
 ## Modules and point calculation
-This project targets the easiest coherent set of modules needed for a valid 42 evaluation:
+The project implements the following coherent module set from the 42 ft_transcendence subject:
 - Frontend framework: 1 point
 - Backend framework: 1 point
 - Real-time WebSocket features: 2 points
@@ -70,7 +70,9 @@ This project targets the easiest coherent set of modules needed for a valid 42 e
 - Web-based multiplayer game: 3 points
 - Remote players: 2 points
 - AI opponent: 2 points
-Total: 14 points
+- Advanced chat: 1 point
+- Accessibility support: 2 points
+- Multiple languages: 1 point
 
 ## Individual contributions
 - [To be filled by the team]
