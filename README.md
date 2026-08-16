@@ -1,4 +1,4 @@
-# ft_transcendence
+This project has been created as part of the 42 curriculum by lmokhtar, luctan, yyaniv, and rromanov.
 
 ## Description
 This project is a full-stack Pong platform developed as part of the 42 ft_transcendence subject. The application includes a secure authentication system, real-time multiplayer features, chat, profile management, friend interactions, and a server-authoritative Pong game. The goal is to deliver a polished web application with a Dockerized deployment and PostgreSQL-backed persistence.
@@ -20,13 +20,25 @@ This project is a full-stack Pong platform developed as part of the 42 ft_transc
 This project was developed without using AI-generated source code as a substitute for a real implementation. Any AI assistance was limited to planning, debugging, and validation support as part of development guidance.
 
 ## Team information
-Project team: [To be filled by the student team]
-Repository owner: Skwashlepro
 
-## Project management
-- Sprint planning: [To be filled by the team]
-- Task tracking: [To be filled by the team]
-- Review process: [To be filled by the team]
+The project was initially developed by two team members, lmokhtar and luctan. Additional contributions are documented below as they are assigned.
+
+### lmokhtar
+- Assigned role(s): Technical Lead, Frontend Developer, Real-Time/Game Developer, Developer
+- Responsibilities: Co-developed the initial application architecture, implemented the React frontend, built the Pong gameplay and WebSocket flows, and integrated the main user-facing features.
+
+### luctan
+- Assigned role(s): Product Owner (PO), Project Manager (PM), Backend Developer, Security Developer
+- Responsibilities: Co-developed the initial backend and project structure, coordinated requirements and milestones, implemented authentication, API routes, database integration, and backend security.
+
+### yyaniv
+- Assigned role(s): Game Statistics Developer
+- Responsibilities: Implemented the minor game-statistics contribution, including match statistics, player records, leaderboard data, and related progression displays.
+
+### [rromanov]
+- Assigned role(s): [Role to be assigned]
+- Responsibilities: [Contribution and responsibilities to be completed by the team].
+
 
 ## Technical stack
 - Frontend: React + React Router + CRA
@@ -62,30 +74,50 @@ Key data structures:
 
 ## Modules and point calculation
 The project implements the following coherent module set from the 42 ft_transcendence subject:
-- Frontend framework: 1 point
-- Backend framework: 1 point
-- Real-time WebSocket features: 2 points
-- User interaction: chat + profiles + friends: 2 points
-- Standard user management: 1 point
-- Web-based multiplayer game: 3 points
-- Remote players: 2 points
-- AI opponent: 2 points
-- Advanced chat: 1 point
-- Accessibility support: 2 points
-- Multiple languages: 1 point
+- Frontend framework: 1 point. React, React Router, and CRA provide the single-page application structure, reusable components, client-side navigation, and production build workflow.
+- Backend framework: 1 point. Go with Gin provides the HTTP API, middleware, route organization, validation, and backend service structure.
+- Real-time WebSocket features: 2 points. WebSockets power live chat, presence updates, matchmaking, game state broadcasts, notifications, and reconnection events.
+- User interaction: chat + profiles + friends: 2 points. Users can manage profiles, upload avatars, search for users, send or accept friend requests, view online status, and exchange persistent messages.
+- Standard user management: 1 point. The project includes signup, signin, JWT sessions, protected routes, bcrypt password hashing, profile updates, and logout handling.
+- Web-based multiplayer game: 3 points. Pong runs in the browser with server-authoritative physics, paddle controls, scoring, match completion, history, and persistent statistics.
+- Remote players: 2 points. Two authenticated users can be matched from separate browser sessions and play the same Pong match in real time through the WebSocket hub.
+- AI opponent: 2 points. The game includes an intentionally imperfect AI with delayed reactions, tracking error, and human-like mistakes instead of perfect paddle movement.
+- Advanced chat: 1 point. Chat includes persistent history, profile access, user blocking, game invitations, game notifications, typing indicators, read receipts, and online presence notifications.
+- Accessibility support: 2 points. The interface includes semantic structure, keyboard navigation, visible focus states, skip navigation, ARIA labels, dialog semantics, and accessible Pong controls.
+- Multiple languages: 1 point. The interface supports English, French, and Spanish through a persistent language switcher and centralized translation provider.
 
-## Individual contributions
-- [To be filled by the team]
-- [To be filled by the team]
-- [To be filled by the team]
+## Individual Contributions
+
+### lmokhtar
+- Co-developed the initial project with luctan.
+- Implemented the React application structure, navigation, game interface, and major user-facing workflows.
+- Contributed to Pong gameplay, WebSocket communication, remote-player flow, reconnection handling, accessibility, and frontend integration.
+
+### luctan
+- Co-developed the initial project with lmokhtar.
+- Implemented the Go/Gin backend structure, REST API routes, authentication, JWT sessions, password hashing, and PostgreSQL integration.
+- Contributed to matchmaking, server-side game coordination, Docker integration, and backend security.
+
+### yyaniv
+- Implemented the minor game-statistics contribution.
+- Added or maintained match history, wins/losses, player statistics, leaderboard information, and progression-related displays.
+
+### [rromanov]
+- [Detailed contribution to be added by the team.]
+
 
 ## Technical choices and justifications
-- React was selected to provide a fast and familiar SPA frontend.
-- Gin was retained because it is lightweight, fast, and compatible with the existing Go backend.
-- PostgreSQL was chosen for reliability and data integrity.
-- WebSockets were used to keep multiplayer game state synchronized in real time.
-- Docker Compose was used to simplify local deployment and keep service orchestration predictable.
-- JWT + bcrypt combine strong session creation and password protection.
+- React was selected to provide a component-based single-page application with reusable UI and predictable state-driven rendering.
+- React Router was chosen to provide client-side navigation between authentication, game, profile, chat, and social pages without full page reloads.
+- Create React App (CRA) provides a consistent development server, linting, and production build pipeline for the frontend.
+- Go was selected for its performance, simple concurrency model, and suitability for a real-time multiplayer backend.
+- Gin was chosen because it is lightweight, provides clear HTTP routing and middleware, and integrates cleanly with the Go backend.
+- PostgreSQL was chosen for relational data integrity and reliable persistence of users, friendships, messages, matches, achievements, and reviews.
+- WebSockets were used for low-latency bidirectional communication, including chat, presence updates, matchmaking, and synchronized Pong state.
+- The Pong game is server-authoritative so clients cannot decide the official ball position, score, or match result.
+- Docker Compose was used to run the frontend, backend, and PostgreSQL services consistently with isolated networking and persistent volumes.
+- JWT provides stateless authenticated sessions between the browser and API, while bcrypt securely hashes user passwords before storage.
 
 ## Final note
-This repository is intended to be an original implementation tailored to the course requirements, with placeholders used where team-specific information is not available.
+This repository is intended to be an original implementation tailored to the course requirements. Team member names and the remaining contribution placeholder should be finalized by the team before submission.
+
