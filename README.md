@@ -35,9 +35,9 @@ The project was initially developed by two team members, lmokhtar and luctan. Ad
 - Assigned role(s): Game Statistics Developer
 - Responsibilities: Implemented the minor game-statistics contribution, including match statistics, player records, leaderboard data, and related progression displays.
 
-### [rromanov]
-- Assigned role(s): [Role to be assigned]
-- Responsibilities: [Contribution and responsibilities to be completed by the team].
+### rromanov
+- Assigned role(s): Accessibility Developer, Internationalization (i18n) Developer, Developer
+- Responsibilities: Implemented accessibility compliance across the application (semantic structure, keyboard navigation, visible focus states, skip navigation, ARIA labels, dialog semantics, and accessible Pong controls), and built the multi-language support system (English, French, Spanish) including the translation provider and persistent language switcher.
 
 
 ## Technical stack
@@ -102,8 +102,9 @@ The project implements the following coherent module set from the 42 ft_transcen
 - Implemented the minor game-statistics contribution.
 - Added or maintained match history, wins/losses, player statistics, leaderboard information, and progression-related displays.
 
-### [rromanov]
-- [Detailed contribution to be added by the team.]
+### rromanov
+- Implemented accessibility support across the interface, including keyboard navigation, ARIA labeling, focus management, and accessible game controls for Pong.
+- Built the internationalization system, adding English, French, and Spanish translations along with the language switcher and centralized translation provider.
 
 
 ## Technical choices and justifications
@@ -117,7 +118,3 @@ The project implements the following coherent module set from the 42 ft_transcen
 - The Pong game is server-authoritative so clients cannot decide the official ball position, score, or match result.
 - Docker Compose was used to run the frontend, backend, and PostgreSQL services consistently with isolated networking and persistent volumes.
 - JWT provides stateless authenticated sessions between the browser and API, while bcrypt securely hashes user passwords before storage.
-
-## Final note
-This repository is intended to be an original implementation tailored to the course requirements. Team member names and the remaining contribution placeholder should be finalized by the team before submission.
-
