@@ -667,10 +667,15 @@ func (h *Hub) onGameFinish(g *game.PongGame) {
 		id := g.Player2ID
 		winnerID = &id
 	} else if g.State.Winner == 2 && g.IsAI {
-		// AI won - player1 loses
+		// AI won - player1 loses.
+		// yyaniv double ai loss bug: this used to also run
+		//   h.db.Exec(`UPDATE users SET losses = losses + 1 WHERE id = $1`, g.Player1ID)
+		// right here. handlers.SaveMatch below already increments losses for
+		// player1 when winnerID is nil and player2ID is nil (AI match), so doing
+		// it here too caused every AI-loss to count as 2 losses instead of 1
+		// Do NOT re-add a losses increment in this branch — SaveMatch owns it
 		score1 = g.State.Score1
 		score2 = g.State.Score2
-		_, _ = h.db.Exec(`UPDATE users SET losses = losses + 1 WHERE id = $1`, g.Player1ID)
 	}
 
 	var player2ID *int
@@ -695,7 +700,7 @@ func (h *Hub) onGameFinish(g *game.PongGame) {
 	}
 
 	// Keep the finished game around briefly so a Rematch request can still find
-	// it; expire it automatically if neither player rematches or leaves.
+	// it; expire it automatically if neither player rematches or leaves
 	gameID := g.ID
 	time.AfterFunc(2*time.Minute, func() {
 		h.mu.Lock()
@@ -705,6 +710,7 @@ func (h *Hub) onGameFinish(g *game.PongGame) {
 		}
 	})
 }
+
 
 func (h *Hub) handleRematch(userID int, gameID string) {
 	h.mu.Lock()
